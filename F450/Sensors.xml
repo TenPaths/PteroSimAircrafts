@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<sensors>
+  <sensor type="imu" name="imu"/>
+  <sensor type="gps" name="gps"/>
+  <sensor type="barometer" name="barometer"/>
+  <sensor type="airspeed" name="airspeed"/>
+  <sensor type="temperature" name="temperature"/>
+  <sensor type="camera" name="camera"/>
+</sensors>

@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!--
+  Derived from the model: the diameter is this propeller's own mesh measured after scaling, and the
+  coefficients reproduce its motorConstant and momentConstant exactly at zero airspeed.
+
+  The tables are flat because the source has no advance ratio in it: Gazebo's motor model computes
+  thrust from rotational speed alone. A curve here would be invented, and this vehicle would then
+  fly on numbers nobody measured.
+-->
+<propeller name="x500_prop_0" version="1.1">
+  <diameter unit="IN"> 13.62 </diameter>
+  <numblades> 2 </numblades>
+  <constspeed> 0 </constspeed>
+  <ixx unit="KG*M2"> 0.0003591 </ixx>
+  <table name="C_THRUST" type="internal">
+    <tableData>
+      0.0  0.0192226
+      1.0  0.0192226
+    </tableData>
+  </table>
+  <table name="C_POWER" type="internal">
+    <tableData>
+      0.0  0.00558518
+      1.0  0.00558518
+    </tableData>
+  </table>
+</propeller>

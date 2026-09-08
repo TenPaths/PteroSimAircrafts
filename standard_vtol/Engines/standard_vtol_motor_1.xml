@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<!--
+  Pusher. Same sizing rule as the lift motors: full throttle holds 3500 rad/s (33423 rpm) under
+  the propeller's own 3670 W load.
+-->
+<brushless_dc_motor name="standard_vtol_motor_1">
+  <velocityconstant> 1000 </velocityconstant>
+  <coilresistance> 0.03 </coilresistance>
+  <noloadcurrent> 0.5 </noloadcurrent>
+  <maxvolts> 36.7 </maxvolts>
+</brushless_dc_motor>

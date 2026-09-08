@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+  <propulsion>
+    <engine file="standard_vtol_motor_0" name="rotor_0">
+      <thruster file="standard_vtol_prop_0">
+        <location unit="M">
+          <x> -0.35 </x>
+          <y> 0.35 </y>
+          <z> 0.07 </z>
+        </location>
+        <orient unit="DEG">
+          <roll> 0 </roll>
+          <pitch> 90 </pitch>
+          <yaw> 0 </yaw>
+        </orient>
+        <sense> 1 </sense>
+      </thruster>
+    </engine>
+    <engine file="standard_vtol_motor_0" name="rotor_1">
+      <thruster file="standard_vtol_prop_0">
+        <location unit="M">
+          <x> 0.35 </x>
+          <y> -0.35 </y>
+          <z> 0.07 </z>
+        </location>
+        <orient unit="DEG">
+          <roll> 0 </roll>
+          <pitch> 90 </pitch>
+          <yaw> 0 </yaw>
+        </orient>
+        <sense> 1 </sense>
+      </thruster>
+    </engine>
+    <engine file="standard_vtol_motor_0" name="rotor_2">
+      <thruster file="standard_vtol_prop_0">
+        <location unit="M">
+          <x> -0.35 </x>
+          <y> -0.35 </y>
+          <z> 0.07 </z>
+        </location>
+        <orient unit="DEG">
+          <roll> 0 </roll>
+          <pitch> 90 </pitch>
+          <yaw> 0 </yaw>
+        </orient>
+        <sense> -1 </sense>
+      </thruster>
+    </engine>
+    <engine file="standard_vtol_motor_0" name="rotor_3">
+      <thruster file="standard_vtol_prop_0">
+        <location unit="M">
+          <x> 0.35 </x>
+          <y> 0.35 </y>
+          <z> 0.07 </z>
+        </location>
+        <orient unit="DEG">
+          <roll> 0 </roll>
+          <pitch> 90 </pitch>
+          <yaw> 0 </yaw>
+        </orient>
+        <sense> -1 </sense>
+      </thruster>
+    </engine>
+    <engine file="standard_vtol_motor_1" name="rotor_puller">
+      <thruster file="standard_vtol_prop_1">
+        <location unit="M">
+          <x> 0.22 </x>
+          <y> 0 </y>
+          <z> 0 </z>
+        </location>
+        <orient unit="DEG">
+          <roll> 0 </roll>
+          <pitch> 0 </pitch>
+          <yaw> 0 </yaw>
+        </orient>
+        <sense> -1 </sense>
+      </thruster>
+    </engine>
+  </propulsion>

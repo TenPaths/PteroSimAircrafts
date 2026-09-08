@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<fdm_config name="x500" version="2.0" release="ALPHA">
+  <metrics file="Metrics.xml"/>
+  <mass_balance file="Mass.xml"/>
+  <ground_reactions file="Gear.xml"/>
+  <propulsion file="Propulsion.xml"/>
+  <aerodynamics file="Aero.xml"/>
+</fdm_config>

@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<!--
+  Whatever Aero.xml was written against. Where the model states coefficients these are its own
+  reference geometry and every one of them is scaled by these; where it states none they scale
+  nothing, and are here because JSBSim divides ground height by the span with no guard.
+
+  The reference points sit at the composite centre of mass, the only place the model states.
+-->
+  <metrics>
+    <wingarea unit="M2"> 0.240124 </wingarea>
+    <wingspan unit="M"> 0.694 </wingspan>
+    <chord unit="M"> 0.346 </chord>
+    <location name="AERORP" unit="M">
+      <x> 0 </x>
+      <y> 0 </y>
+      <z> 0.00186913 </z>
+    </location>
+    <location name="EYEPOINT" unit="M">
+      <x> 0 </x>
+      <y> 0 </y>
+      <z> 0.00186913 </z>
+    </location>
+    <location name="VRP" unit="M">
+      <x> 0 </x>
+      <y> 0 </y>
+      <z> 0.00186913 </z>
+    </location>
+  </metrics>

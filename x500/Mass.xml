@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!--
+  Written from the model's own <inertial> blocks: 5 link(s) summed, and the inertia carried
+  to the composite centre by the parallel-axis theorem. Nothing here was chosen.
+-->
+  <mass_balance>
+    <emptywt unit="KG"> 2.06431 </emptywt>
+    <location name="CG" unit="M">
+      <x> 0 </x>
+      <y> 0 </y>
+      <z> 0.00186913 </z>
+    </location>
+    <ixx unit="KG*M2"> 0.0238395 </ixx>
+    <iyy unit="KG*M2"> 0.0239424 </iyy>
+    <izz unit="KG*M2"> 0.044 </izz>
+    <ixy unit="KG*M2"> 0 </ixy>
+    <ixz unit="KG*M2"> 0 </ixz>
+    <iyz unit="KG*M2"> 0 </iyz>
+  </mass_balance>

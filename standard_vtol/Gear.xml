@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+  <ground_reactions>
+    <contact type="BOGEY" name="base_link_collision_0">
+      <location unit="M">
+        <x> 0.275 </x>
+        <y> 1.072 </y>
+        <z> -0.095 </z>
+      </location>
+      <static_friction> 0.8 </static_friction>
+      <dynamic_friction> 0.5 </dynamic_friction>
+      <spring_coeff unit="N/M"> 541.6 </spring_coeff>
+      <damping_coeff unit="N/M/SEC"> 36.52 </damping_coeff>
+      <orientation unit="DEG">
+        <roll> 0 </roll>
+        <pitch> 0 </pitch>
+        <yaw> 0 </yaw>
+      </orientation>
+      <rolling_friction> 0.02 </rolling_friction>
+      <max_steer unit="DEG"> 0 </max_steer>
+      <brake_group> NONE </brake_group>
+      <retractable> 0 </retractable>
+    </contact>
+    <contact type="BOGEY" name="base_link_collision_1">
+      <location unit="M">
+        <x> 0.275 </x>
+        <y> -1.072 </y>
+        <z> -0.095 </z>
+      </location>
+      <static_friction> 0.8 </static_friction>
+      <dynamic_friction> 0.5 </dynamic_friction>
+      <spring_coeff unit="N/M"> 541.6 </spring_coeff>
+      <damping_coeff unit="N/M/SEC"> 36.52 </damping_coeff>
+      <orientation unit="DEG">
+        <roll> 0 </roll>
+        <pitch> 0 </pitch>
+        <yaw> 0 </yaw>
+      </orientation>
+      <rolling_friction> 0.02 </rolling_friction>
+      <max_steer unit="DEG"> 0 </max_steer>
+      <brake_group> NONE </brake_group>
+      <retractable> 0 </retractable>
+    </contact>
+    <contact type="BOGEY" name="base_link_collision_2">
+      <location unit="M">
+        <x> -0.275 </x>
+        <y> 1.072 </y>
+        <z> -0.095 </z>
+      </location>
+      <static_friction> 0.8 </static_friction>
+      <dynamic_friction> 0.5 </dynamic_friction>
+      <spring_coeff unit="N/M"> 541.6 </spring_coeff>
+      <damping_coeff unit="N/M/SEC"> 36.52 </damping_coeff>
+      <orientation unit="DEG">
+        <roll> 0 </roll>
+        <pitch> 0 </pitch>
+        <yaw> 0 </yaw>
+      </orientation>
+      <rolling_friction> 0.02 </rolling_friction>
+      <max_steer unit="DEG"> 0 </max_steer>
+      <brake_group> NONE </brake_group>
+      <retractable> 0 </retractable>
+    </contact>
+    <contact type="BOGEY" name="base_link_collision_3">
+      <location unit="M">
+        <x> -0.275 </x>
+        <y> -1.072 </y>
+        <z> -0.095 </z>
+      </location>
+      <static_friction> 0.8 </static_friction>
+      <dynamic_friction> 0.5 </dynamic_friction>
+      <spring_coeff unit="N/M"> 541.6 </spring_coeff>
+      <damping_coeff unit="N/M/SEC"> 36.52 </damping_coeff>
+      <orientation unit="DEG">
+        <roll> 0 </roll>
+        <pitch> 0 </pitch>
+        <yaw> 0 </yaw>
+      </orientation>
+      <rolling_friction> 0.02 </rolling_friction>
+      <max_steer unit="DEG"> 0 </max_steer>
+      <brake_group> NONE </brake_group>
+      <retractable> 0 </retractable>
+    </contact>
+  </ground_reactions>

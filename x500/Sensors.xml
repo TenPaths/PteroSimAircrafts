@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<!--
+  Written from the model's <sensor> blocks. Metres and degrees, X forward / Y right / Z up, the
+  same frame Visual.xml states. An attribute absent here means the component's own default.
+-->
+<sensors>
+  <sensor type="barometer" name="air_pressure_sensor" xyz="0 0 0" rpy="0 0 0" hz="50"/>
+  <sensor type="imu" name="imu_sensor" xyz="0 0 0" rpy="0 0 0" hz="250"/>
+  <sensor type="gps" name="navsat_sensor" xyz="0 0 0" rpy="0 0 0" hz="30"/>
+</sensors>

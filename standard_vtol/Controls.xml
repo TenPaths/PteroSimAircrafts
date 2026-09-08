@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<control_bindings stack="PX4">
+  <binding channel="0" type="Motor" in="0 1" out="0 1" label="rotor_0"/>
+  <binding channel="1" type="Motor" index="1" in="0 1" out="0 1" label="rotor_1"/>
+  <binding channel="2" type="Motor" index="2" in="0 1" out="0 1" label="rotor_2"/>
+  <binding channel="3" type="Motor" index="3" in="0 1" out="0 1" label="rotor_3"/>
+  <binding channel="4" type="Motor" index="4" in="0 1" out="0 1" label="rotor_puller"/>
+  <binding channel="5" property="fcs/servo-0-cmd-norm" in="-1 1" out="-1 1" label="left_elevon"/>
+  <binding channel="6" property="fcs/servo-1-cmd-norm" in="-1 1" out="-1 1" label="right_elevon"/>
+  <binding channel="7" property="fcs/servo-2-cmd-norm" in="-1 1" out="-1 1" label="elevator"/>
+</control_bindings>

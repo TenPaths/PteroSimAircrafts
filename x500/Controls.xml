@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!--
+  Generated from the source Gazebo model. A sidecar: JSBSim never reads this file.
+
+  Motors take the low channels in the order the model's motorNumber states, then the servos in the
+  order their joint controllers state. The PX4 airframe generated beside this uses the same order,
+  which is the only reason the two ends agree.
+-->
+<control_bindings stack="PX4">
+  <binding channel="0" type="Motor" index="0" label="rotor_0"/>
+  <binding channel="1" type="Motor" index="1" label="rotor_1"/>
+  <binding channel="2" type="Motor" index="2" label="rotor_2"/>
+  <binding channel="3" type="Motor" index="3" label="rotor_3"/>
+</control_bindings>

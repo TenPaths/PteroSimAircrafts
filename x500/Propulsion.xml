@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<!--
+  Every part of this came from the model: where each rotor sits, which way it turns, and the
+  propeller and motor in Engines/, whose coefficients reproduce its own motorConstant and
+  momentConstant. What the model does not state is named inside those two files.
+-->
+<propulsion>
+  <engine file="x500_motor_0" name="rotor_0">
+    <thruster file="x500_prop_0">
+      <location unit="M">
+        <x>-0.174</x>
+        <y>0.174</y>
+        <z>0.06</z>
+      </location>
+      <orient unit="DEG">
+        <roll>0</roll>
+        <pitch>90</pitch>
+        <yaw>0</yaw>
+      </orient>
+      <sense>1</sense>
+      <p_factor>0.0</p_factor>
+    </thruster>
+  </engine>
+
+  <engine file="x500_motor_0" name="rotor_1">
+    <thruster file="x500_prop_0">
+      <location unit="M">
+        <x>0.174</x>
+        <y>-0.174</y>
+        <z>0.06</z>
+      </location>
+      <orient unit="DEG">
+        <roll>0</roll>
+        <pitch>90</pitch>
+        <yaw>0</yaw>
+      </orient>
+      <sense>1</sense>
+      <p_factor>0.0</p_factor>
+    </thruster>
+  </engine>
+
+  <engine file="x500_motor_0" name="rotor_2">
+    <thruster file="x500_prop_0">
+      <location unit="M">
+        <x>-0.174</x>
+        <y>-0.174</y>
+        <z>0.06</z>
+      </location>
+      <orient unit="DEG">
+        <roll>0</roll>
+        <pitch>90</pitch>
+        <yaw>0</yaw>
+      </orient>
+      <sense>-1</sense>
+      <p_factor>0.0</p_factor>
+    </thruster>
+  </engine>
+
+  <engine file="x500_motor_0" name="rotor_3">
+    <thruster file="x500_prop_0">
+      <location unit="M">
+        <x>0.174</x>
+        <y>0.174</y>
+        <z>0.06</z>
+      </location>
+      <orient unit="DEG">
+        <roll>0</roll>
+        <pitch>90</pitch>
+        <yaw>0</yaw>
+      </orient>
+      <sense>-1</sense>
+      <p_factor>0.0</p_factor>
+    </thruster>
+  </engine>
+
+</propulsion>

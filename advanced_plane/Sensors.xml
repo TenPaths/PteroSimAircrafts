@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<sensors>
+  <sensor type="imu" name="imu_sensor" hz="250"/>
+  <sensor type="barometer" name="air_pressure_sensor" hz="50" white_noise_sigma="0.0001"/>
+  <sensor type="gps" name="navsat_sensor" hz="30"/>
+  <sensor type="airspeed" name="airspeed"/>
+</sensors>

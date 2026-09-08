@@ -1,0 +1,127 @@
+<?xml version="1.0"?>
+<!--
+  Generated from the source Gazebo model. One channel per servo the model's joint controllers
+  drive, scaled to the travel that servo's own joint declares. The number is the model's own
+  servo_N, which is PX4's Servo N+1.
+-->
+<flight_control name="Surfaces">
+  <property value="0.0">fcs/servo-0-cmd-norm</property>
+  <property value="0.0">fcs/servo-1-cmd-norm</property>
+  <property value="0.0">fcs/servo-2-cmd-norm</property>
+  <property value="0.0">fcs/servo-3-cmd-norm</property>
+  <property value="0.0">fcs/servo-4-cmd-norm</property>
+
+  <channel name="servo_0">
+    <aerosurface_scale name="fcs/servo-0-scale">
+      <input>fcs/servo-0-cmd-norm</input>
+      <domain>
+        <min>-1</min>
+        <max>1</max>
+      </domain>
+      <range>
+        <min>-30.3668</min>
+        <max>30.3668</max>
+      </range>
+      <output>fcs/servo-0-pos-deg</output>
+      <output>fcs/left-aileron-pos-deg</output>
+    </aerosurface_scale>
+  </channel>
+
+  <channel name="servo_1">
+    <aerosurface_scale name="fcs/servo-1-scale">
+      <input>fcs/servo-1-cmd-norm</input>
+      <domain>
+        <min>-1</min>
+        <max>1</max>
+      </domain>
+      <range>
+        <min>-30.3668</min>
+        <max>30.3668</max>
+      </range>
+      <output>fcs/servo-1-pos-deg</output>
+      <output>fcs/right-aileron-pos-deg</output>
+    </aerosurface_scale>
+  </channel>
+
+  <channel name="servo_2">
+    <aerosurface_scale name="fcs/servo-2-scale">
+      <input>fcs/servo-2-cmd-norm</input>
+      <domain>
+        <min>-1</min>
+        <max>1</max>
+      </domain>
+      <range>
+        <min>-30.3668</min>
+        <max>30.3668</max>
+      </range>
+      <output>fcs/servo-2-pos-deg</output>
+      <output>fcs/elevator-pos-deg</output>
+    </aerosurface_scale>
+  </channel>
+
+  <channel name="servo_3">
+    <aerosurface_scale name="fcs/servo-3-scale">
+      <input>fcs/servo-3-cmd-norm</input>
+      <domain>
+        <min>-1</min>
+        <max>1</max>
+      </domain>
+      <range>
+        <min>0</min>
+        <max>89.9544</max>
+      </range>
+      <output>fcs/servo-3-pos-deg</output>
+          <zero_centered>0</zero_centered>
+    </aerosurface_scale>
+  </channel>
+
+  <channel name="servo_4">
+    <aerosurface_scale name="fcs/servo-4-scale">
+      <input>fcs/servo-4-cmd-norm</input>
+      <domain>
+        <min>-1</min>
+        <max>1</max>
+      </domain>
+      <range>
+        <min>0</min>
+        <max>89.9544</max>
+      </range>
+      <output>fcs/servo-4-pos-deg</output>
+          <zero_centered>0</zero_centered>
+    </aerosurface_scale>
+  </channel>
+
+  <channel name="tilt_thrust">
+    <!-- The nacelle angle has to reach the THRUST, not just the mesh: JSBSim takes a thruster's
+         direction from a static <orient>, but publishes it as a writable property. servo-3/4 already
+         drive the visual in degrees of nacelle rotation; these drive the same command into the engine.
+         The senses are opposite: the model's nacelle is 0 when vertical, JSBSim's thruster pitch is
+         90 deg (1.5708 rad) when vertical and 0 pointing forward. -->
+    <aerosurface_scale name="fcs/tilt-0-rad">
+      <input>fcs/servo-3-cmd-norm</input>
+      <domain>
+        <min>-1</min>
+        <max>1</max>
+      </domain>
+      <range>
+        <min>1.5708</min>
+        <max>0</max>
+      </range>
+      <output>propulsion/engine[0]/pitch-angle-rad</output>
+          <zero_centered>0</zero_centered>
+    </aerosurface_scale>
+    <aerosurface_scale name="fcs/tilt-2-rad">
+      <input>fcs/servo-4-cmd-norm</input>
+      <domain>
+        <min>-1</min>
+        <max>1</max>
+      </domain>
+      <range>
+        <min>1.5708</min>
+        <max>0</max>
+      </range>
+      <output>propulsion/engine[2]/pitch-angle-rad</output>
+          <zero_centered>0</zero_centered>
+    </aerosurface_scale>
+  </channel>
+</flight_control>

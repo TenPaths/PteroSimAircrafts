@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<!--
+  Which channel from the autopilot drives what on this vehicle.
+
+    stack (on control_bindings)  which autopilot is flying it now
+    stack (on a binding)         which autopilots that row is for; several may be named, and naming
+                                 none means every one of them
+    channel                      the number the autopilot sends
+    type                         what it drives: Motor, Elevator, Aileron, Rudder, Flaps, Gripper, Servo
+    index                        which one of them, counting from zero in the order Propulsion.xml lists
+    in / out                     the range in and the range out, two numbers each; absent means 0 to 1
+    invert                       1 to reverse the direction, for a linkage fitted the other way round
+    label                        a name for the panel; it changes nothing
+
+  Autopilots do not number motors alike. ArduPilot and PX4 take this quad's four in the model's own
+  order, so those rows name both. BetaFlight's mixer counts them starting from the rear right, so it
+  gets its own four rows.
+-->
+<control_bindings stack="PX4">
+  <binding stack="ArduPilot PX4" channel="0" type="Motor" index="0" label="front right"/>
+  <binding stack="ArduPilot PX4" channel="1" type="Motor" index="1" label="aft left"/>
+  <binding stack="ArduPilot PX4" channel="2" type="Motor" index="2" label="front left"/>
+  <binding stack="ArduPilot PX4" channel="3" type="Motor" index="3" label="aft right"/>
+
+  <!-- A gripper opens as well as closes, so this channel takes a two-sided input range. -->
+  <binding stack="ArduPilot PX4" channel="4" type="Gripper" index="0" in="-1 1" label="Gripper"/>
+
+  <binding stack="BetaFlight" channel="0" type="Motor" index="3" label="aft right"/>
+  <binding stack="BetaFlight" channel="1" type="Motor" index="0" label="front right"/>
+  <binding stack="BetaFlight" channel="2" type="Motor" index="1" label="aft left"/>
+  <binding stack="BetaFlight" channel="3" type="Motor" index="2" label="front left"/>
+</control_bindings>

@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<!--
+  One contact per box collision, placed at the box's lowest corner with its own rotation applied.
+  The friction and spring figures are NOT from the model: SDF states surface properties this format
+  has no room for, so these are ordinary values and the first thing to tune if it bounces.
+-->
+  <ground_reactions>
+    <contact type="BOGEY" name="base_link_collision_0">
+      <location unit="M">
+        <x> 0.285 </x>
+        <y> 1.072 </y>
+        <z> -0.105 </z>
+      </location>
+      <static_friction> 0.8 </static_friction>
+      <dynamic_friction> 0.5 </dynamic_friction>
+      <spring_coeff unit="N/M"> 553.5 </spring_coeff>
+      <damping_coeff unit="N/M/SEC"> 37.32 </damping_coeff>
+    </contact>
+    <contact type="BOGEY" name="base_link_collision_1">
+      <location unit="M">
+        <x> 0.285 </x>
+        <y> -1.072 </y>
+        <z> -0.105 </z>
+      </location>
+      <static_friction> 0.8 </static_friction>
+      <dynamic_friction> 0.5 </dynamic_friction>
+      <spring_coeff unit="N/M"> 553.5 </spring_coeff>
+      <damping_coeff unit="N/M/SEC"> 37.32 </damping_coeff>
+    </contact>
+    <contact type="BOGEY" name="base_link_collision_2">
+      <location unit="M">
+        <x> -0.265 </x>
+        <y> 1.072 </y>
+        <z> -0.105 </z>
+      </location>
+      <static_friction> 0.8 </static_friction>
+      <dynamic_friction> 0.5 </dynamic_friction>
+      <spring_coeff unit="N/M"> 553.5 </spring_coeff>
+      <damping_coeff unit="N/M/SEC"> 37.32 </damping_coeff>
+    </contact>
+    <contact type="BOGEY" name="base_link_collision_3">
+      <location unit="M">
+        <x> -0.265 </x>
+        <y> -1.072 </y>
+        <z> -0.105 </z>
+      </location>
+      <static_friction> 0.8 </static_friction>
+      <dynamic_friction> 0.5 </dynamic_friction>
+      <spring_coeff unit="N/M"> 553.5 </spring_coeff>
+      <damping_coeff unit="N/M/SEC"> 37.32 </damping_coeff>
+    </contact>
+  </ground_reactions>

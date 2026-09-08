@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<!--
+  Generated from the source Gazebo model.
+
+  A rotorcraft has no wing, so there is no lift or wind-axis drag to state. What it does have is the drag
+  of its own turning rotors, which the source model declares as rotorDragCoefficient and which is the only
+  thing that stops a tilted quadcopter accelerating for ever. Gazebo applies it as
+
+      F = -|omega| * rotorDragCoefficient * v_perpendicular
+
+  which is linear in speed and in rotor speed, not the square of speed that ordinary aerodynamics is. It is
+  written in body axes against the body velocity components, and the rotor speed is summed from the engines
+  themselves rather than assumed, because a manoeuvring vehicle does not turn all four at the same rate.
+
+  Body axes and wind axes cannot be mixed in one file, which is why LIFT, DRAG and SIDE are absent rather
+  than zero.
+
+  The model also declares rollingMomentCoefficient of 1e-06, which is eighty times smaller than the drag
+  and is left out; state it here if it is ever measured to matter.
+-->
+<aerodynamics>
+  <axis name="X">
+    <function name="aero/force/rotor-drag-x">
+      <description>Rotor drag along the body X axis</description>
+      <product>
+        <value>-5.786591e-07</value>
+        <property>velocities/u-aero-fps</property>
+        <sum>
+          <property>propulsion/engine[0]/propeller-rpm</property>
+          <property>propulsion/engine[1]/propeller-rpm</property>
+          <property>propulsion/engine[2]/propeller-rpm</property>
+          <property>propulsion/engine[3]/propeller-rpm</property>
+        </sum>
+      </product>
+    </function>
+  </axis>
+
+  <axis name="Y">
+    <function name="aero/force/rotor-drag-y">
+      <description>Rotor drag along the body Y axis</description>
+      <product>
+        <value>-5.786591e-07</value>
+        <property>velocities/v-aero-fps</property>
+        <sum>
+          <property>propulsion/engine[0]/propeller-rpm</property>
+          <property>propulsion/engine[1]/propeller-rpm</property>
+          <property>propulsion/engine[2]/propeller-rpm</property>
+          <property>propulsion/engine[3]/propeller-rpm</property>
+        </sum>
+      </product>
+    </function>
+  </axis>
+
+  <axis name="Z">
+    <function name="aero/force/none-z">
+      <description>Nothing: the rotors carry this vehicle, and their thrust is not aerodynamics</description>
+      <value>0.0</value>
+    </function>
+  </axis>
+
+  <axis name="ROLL">
+    <function name="aero/moment/none-roll">
+      <value>0.0</value>
+    </function>
+  </axis>
+
+  <axis name="PITCH">
+    <function name="aero/moment/none-pitch">
+      <value>0.0</value>
+    </function>
+  </axis>
+
+  <axis name="YAW">
+    <function name="aero/moment/none-yaw">
+      <value>0.0</value>
+    </function>
+  </axis>
+</aerodynamics>

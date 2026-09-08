@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!--
+  Generated from the source model's SDF. Metres and degrees in the
+  vehicle's frame: X forward, Y right, Z up. An axis is read in the frame of whatever turns.
+-->
+<visual>
+  <fixture file="meshes/base_link__base_link_visual.glb" xyz="0 0 0.025" rpy="0 0 90"/>
+
+  <fixture file="meshes/base_link__5010_motor_base_0.glb" xyz="0.174 -0.174 0.032" rpy="0 0 -64.2169"/>
+  <fixture file="meshes/base_link__5010_motor_base_1.glb" xyz="-0.174 -0.174 0.032" rpy="0 0 -64.2169"/>
+  <fixture file="meshes/base_link__5010_motor_base_2.glb" xyz="0.174 0.174 0.032" rpy="0 0 -64.2169"/>
+  <fixture file="meshes/base_link__5010_motor_base_3.glb" xyz="-0.174 0.174 0.032" rpy="0 0 -64.2169"/>
+  <fixture file="meshes/rotor_0__rotor_0_visual_motor_bell.glb" xyz="0.174 0.174 0.028" rpy="0 0 -90"/>
+  <fixture file="meshes/rotor_1__rotor_1_visual_motor_top.glb" xyz="-0.174 -0.174 0.028" rpy="0 0 -90"/>
+  <fixture file="meshes/rotor_2__rotor_2_visual_motor_top.glb" xyz="0.174 -0.174 0.028" rpy="0 0 -90"/>
+  <fixture file="meshes/rotor_3__rotor_3_visual_motor_top.glb" xyz="-0.174 0.174 0.028" rpy="0 0 -90"/>
+
+  <propeller file="meshes/rotor_0__rotor_0_visual.glb" xyz="0 0 -0.00330769" rpy="0 0 -90" motor="rotor_0" axis="0 0 -1"/>
+  <propeller file="meshes/rotor_1__rotor_1_visual.glb" xyz="0 0 -0.00330769" rpy="0 0 -90" motor="rotor_1" axis="0 0 -1"/>
+  <propeller file="meshes/rotor_2__rotor_2_visual.glb" xyz="0 0 -0.00330769" rpy="0 0 -90" motor="rotor_2" axis="0 0 -1"/>
+  <propeller file="meshes/rotor_3__rotor_3_visual.glb" xyz="0 0 -0.00330769" rpy="0 0 -90" motor="rotor_3" axis="0 0 -1"/>
+
+</visual>

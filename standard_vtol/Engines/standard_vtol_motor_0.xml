@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!--
+  Sized so full throttle turns the propeller at the model's maxRotVelocity of 1500 rad/s
+  (14324 rpm) under its own load, which costs 4055 W. A 14.8 V pack cannot deliver that: the
+  motor stalled at ~7000 rpm and the vehicle made a quarter of its thrust. Kv, volts and
+  resistance solve (I - I0)*RPM/Kv = 4055 W at 14324 rpm. Gazebo drives the joint at a
+  commanded speed and never pays this bill; JSBSim's motor does.
+-->
+<brushless_dc_motor name="standard_vtol_motor_0">
+  <velocityconstant> 500 </velocityconstant>
+  <coilresistance> 0.03 </coilresistance>
+  <noloadcurrent> 0.5 </noloadcurrent>
+  <maxvolts> 32.9 </maxvolts>
+</brushless_dc_motor>
