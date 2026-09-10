@@ -1,9 +1,18 @@
 <?xml version="1.0"?>
-<!-- ZLT-NT PX4 HIL outputs.  Channel order is fixed by px4_zlt_nt:
-     Motor1 starboard, Motor2 port, Motor3 aft, Motor4 lateral yaw. -->
+<!-- Normalised commands, one channel per thing this ship can be told to do, driven
+     by fly_airship.py through SetActuatorControls. No stack is named because no autopilot
+     here flies an airship: PX4's module offers a forward thrust and two moments, and
+     an airship leaves the ground by vectoring its engines and venting its ballonets,
+     neither of which any autopilot output maps to. Channels 0-4 are still in the
+     order PX4 would send, so anyone who writes an airframe for it starts from here. -->
 <control_bindings>
   <binding channel="0" type="Motor" index="1" property="fcs/drive-throttle-norm[1]" in="0 1" out="0 1" label="starboard forward engine"/>
   <binding channel="1" type="Motor" index="0" property="fcs/drive-throttle-norm[0]" in="0 1" out="0 1" label="port forward engine"/>
   <binding channel="2" type="Motor" index="2" property="fcs/drive-throttle-norm[2]" in="0 1" out="0 1" label="aft forward engine"/>
-  <binding channel="3" property="fcs/pilot/yaw-cmd-norm" in="-1 1" out="-1 1" label="yaw / auxiliary engine and rudders"/>
+  <binding channel="3" property="fcs/pilot/yaw-cmd-norm" in="-1 1" out="-1 1" label="yaw: rudders and the lateral thruster"/>
+  <binding channel="4" property="fcs/side-engine-swivel-cmd-norm" in="0 1" out="0 1" label="side nacelles, 0..120 deg up"/>
+  <binding channel="5" property="fcs/rear-engine-swivel-cmd-norm" in="0 1" out="0 1" label="aft nacelle, 0..120 deg up"/>
+  <binding channel="6" property="fcs/pilot/pitch-cmd-norm" in="-1 1" out="-1 1" label="elevator"/>
+  <binding channel="7" property="fcs/ballonet-inflation-cmd-norm[0]" in="-1 1" out="-1 1" label="forward ballonet: + fills with air and grows heavy, - vents and grows light"/>
+  <binding channel="8" property="fcs/ballonet-inflation-cmd-norm[1]" in="-1 1" out="-1 1" label="aft ballonet, the same"/>
 </control_bindings>

@@ -3,13 +3,28 @@
      model states everything else against its structural origin, the mooring cone
      at the bow; the loaded CG sits 34.37 m aft of it and 3.88 m below it, which
      is what the simulator reports and what the hull GLB is baked about.
-     No <surface> here: the hull mesh already carries all three fins, and a second
-     copy of them hinged on top is what this file used to add.  Splitting the
-     movable rudders out of the hull is what would bring deflection back. -->
+     The six moving parts were cut out of that hull rather than modelled again, so
+     each one still meets it along the seam it was cut on, and each GLB is baked
+     about its own hinge -- which is why every xyz below is zero. -->
 <visual>
   <fixture file="meshes/zlt_nt_airframe.glb" xyz="0 0 0" rpy="0 0 0"/>
-  <propeller file="meshes/left_propeller.glb" xyz="0 0 0" rpy="0 0 0" motor="motor 0" axis="1 0 0"/>
-  <propeller file="meshes/right_propeller.glb" xyz="0 0 0" rpy="0 0 0" motor="motor 1" axis="1 0 0"/>
-  <propeller file="meshes/aft_main_propeller.glb" xyz="0 0 0" rpy="0 0 0" motor="motor 2" axis="1 0 0"/>
-  <propeller file="meshes/aft_aux_propeller.glb" xyz="0 0 0" rpy="0 0 0" motor="motor 3" axis="0 1 0"/>
+
+  <!-- The tail is an inverted Y: one fin up, two down at 112 degrees, hinged at the
+       station where the mesh doubles, 29.9 m aft of the CG. The upper one steers,
+       the lower pair carries the elevator, which is how a Y tail works. -->
+  <surface file="meshes/zlt_nt_rudder_upper.glb" xyz="0 0 0" rpy="0 0 0" source="rudder" axis="0 0 1" hinge="-29.90 0 11.93" limit="25"/>
+  <surface file="meshes/zlt_nt_rudder_port.glb" xyz="0 0 0" rpy="0 0 0" source="elevator" axis="0 -0.927 -0.375" hinge="-29.90 -7.46 0.86" limit="25"/>
+  <surface file="meshes/zlt_nt_rudder_stbd.glb" xyz="0 0 0" rpy="0 0 0" source="elevator" axis="0 0.927 -0.375" hinge="-29.90 7.46 0.86" limit="25"/>
+
+  <!-- Vectored thrust: the housings swivel with the engines they carry, so they are
+       hinged where JSBSim swings the thrust and the blades ride on them. The side
+       pair reaches 120 degrees, the aft one 90. -->
+  <surface file="meshes/zlt_nt_nacelle_port.glb" xyz="0 0 0" rpy="0 0 0" source="tilt:motor 0" axis="0 -1 0" hinge="8.87 -8.00 0.38" limit="120"/>
+  <surface file="meshes/zlt_nt_nacelle_stbd.glb" xyz="0 0 0" rpy="0 0 0" source="tilt:motor 1" axis="0 -1 0" hinge="8.87 8.00 0.38" limit="120"/>
+  <surface file="meshes/zlt_nt_nacelle_aft.glb" xyz="0 0 0" rpy="0 0 0" source="tilt:motor 2" axis="0 -1 0" hinge="-40.53 0 3.88" limit="90"/>
+
+  <propeller file="meshes/left_propeller.glb" xyz="0 0 0" rpy="0 90 0" motor="motor 0" axis="1 0 0"/>
+  <propeller file="meshes/right_propeller.glb" xyz="0 0 0" rpy="0 90 0" motor="motor 1" axis="1 0 0"/>
+  <propeller file="meshes/aft_main_propeller.glb" xyz="0 0 0" rpy="0 90 0" motor="motor 2" axis="1 0 0"/>
+  <propeller file="meshes/aft_aux_propeller.glb" xyz="0 0 0" rpy="-90 0 0" motor="motor 3" axis="0 1 0"/>
 </visual>
