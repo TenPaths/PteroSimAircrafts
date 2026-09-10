@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<!-- ZLT-NT PX4 HIL outputs.  Channel order is fixed by px4_zlt_nt:
+     Motor1 starboard, Motor2 port, Motor3 aft, Motor4 lateral yaw. -->
+<control_bindings>
+  <binding channel="0" type="Motor" index="1" property="fcs/drive-throttle-norm[1]" in="0 1" out="0 1" label="starboard forward engine"/>
+  <binding channel="1" type="Motor" index="0" property="fcs/drive-throttle-norm[0]" in="0 1" out="0 1" label="port forward engine"/>
+  <binding channel="2" type="Motor" index="2" property="fcs/drive-throttle-norm[2]" in="0 1" out="0 1" label="aft forward engine"/>
+  <binding channel="3" property="fcs/pilot/yaw-cmd-norm" in="-1 1" out="-1 1" label="yaw / auxiliary engine and rudders"/>
+</control_bindings>

@@ -1,0 +1,11 @@
+ZLT-NT aircraft package
+
+This package incorporates the FlightGear/JSBSim Zeppelin NT-07 airship flight
+model by Anders Gidenstam (Copyright (C) 2008-2023).
+
+Original upstream model: FlightGear / JSBSim, aircraft "ZLT-NT".
+The upstream model declares GPL-2.0-or-later; see LICENSE and the retained
+copyright headers in ZLT-NT.xml and Systems/.
+
+PteroSim-specific work in this package consists of the Visual.xml layout,
+converted GLB meshes, PteroSim Drive bindings, and integration adjustments.

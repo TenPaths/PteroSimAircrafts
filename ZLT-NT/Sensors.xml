@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<!-- Required physical sensors for PX4 HIL.  Positions use metres from the
+     authored ZLT-NT reference point; the avionics are represented at CG. -->
+<sensors>
+  <sensor type="imu" name="imu_sensor" xyz="0 0 0" rpy="0 0 0" hz="250"/>
+  <sensor type="barometer" name="air_pressure_sensor" xyz="0 0 0" rpy="0 0 0" hz="50" white_noise_sigma="0.0001"/>
+  <sensor type="gps" name="navsat_sensor" xyz="0 0 0" rpy="0 0 0" hz="30"/>
+  <sensor type="airspeed" name="airspeed" xyz="0 0 0" rpy="0 0 0" hz="50"/>
+</sensors>
