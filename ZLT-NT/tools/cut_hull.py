@@ -53,7 +53,7 @@ import json, struct
 def _pad(b, fill=b'\0'):
     return b + fill * ((4 - len(b) % 4) % 4)
 
-def write_glb(path, prims, src_json, src_bin, node_name="part", translation=None):
+def write_glb(path, prims, src_json, src_bin, node_name="part", translation=None, paint=None):
     out_mats, mat_map, out_tex, out_img, out_smp, views, bin_ = [], {}, [], [], [], [], bytearray()
 
     def add_view(data, target=None):
@@ -85,6 +85,17 @@ def write_glb(path, prims, src_json, src_bin, node_name="part", translation=None
         out_tex.append(tex)
         return len(out_tex) - 1
 
+    painted = {}
+
+    def add_painted(png):
+        """One copy of the sheet per file, however many materials wear it."""
+        if png not in painted:
+            out_img.append({"mimeType": "image/png", "bufferView": add_view(open(png, 'rb').read())})
+            out_smp.append({"magFilter": 9729, "minFilter": 9987, "wrapS": 10497, "wrapT": 10497})
+            out_tex.append({"source": len(out_img) - 1, "sampler": len(out_smp) - 1})
+            painted[png] = len(out_tex) - 1
+        return painted[png]
+
     def add_material(m):
         if m in mat_map:
             return mat_map[m]
@@ -97,6 +108,13 @@ def write_glb(path, prims, src_json, src_bin, node_name="part", translation=None
                     if k.endswith('Texture') and 'index' in v:
                         v['index'] = add_texture(v['index'])
                     stack.append(v)
+        png = (paint or {}).get(mat.get('name'))
+        if png:
+            # The sheet replaces whatever the model shipped: these materials carried a
+            # 169-byte placeholder or nothing at all, and a white hull is not a livery.
+            pbr = mat.setdefault('pbrMetallicRoughness', {})
+            pbr['baseColorTexture'] = {"index": add_painted(png)}
+            pbr.pop('baseColorFactor', None)
         out_mats.append(mat)
         mat_map[m] = len(out_mats) - 1
         return mat_map[m]
@@ -142,6 +160,7 @@ def write_glb(path, prims, src_json, src_bin, node_name="part", translation=None
 
 SRC = sys.argv[1]
 OUT = sys.argv[2]
+LIVERY = sys.argv[3] if len(sys.argv) > 3 else None    # a PNG for the envelope, laid out by sheet_uv
 YAX = 3.88
 HINGE_Z = 29.9      # the fin sheet doubles here: forward of it the fixed fin, aft of it the rudder
 FIN_R = 3.4
@@ -181,6 +200,44 @@ PARTS = [
     ("nacelle_aft", aft_nacelle, (0.0, YAX, 40.53)),
 ]
 
+ENVELOPE_MATERIALS = ('Envelope', 'Envelope.002', 'Envelope.003')
+Z_BOW, Z_TAIL = -34.02, 41.01     # the hull ends, and the span u is measured over
+
+
+def sheet_uv(p):
+    """Where a point on the hull lands on the sheet: u bow to tail, v round the axis."""
+    u = (p[2] - Z_BOW) / (Z_TAIL - Z_BOW)
+    return u, (math.degrees(math.atan2(p[0], p[1] - YAX)) + 180.0) / 360.0
+
+
+def unwrap(src):
+    """Wrap the sheet round the hull, splitting the triangles that cross the seam.
+
+    The model arrives with the whole texture square on every single triangle, which is
+    no unwrap at all: lettering on it would repeat once per face. Triangles straddling
+    the seam -- which runs under the keel, where nobody looks -- get their own copies of
+    the vertices a full turn along, so the sheet does not run backwards across them.
+    """
+    seen, pos, nrm, uv, idx = {}, [], [], [], []
+    src_idx = src['idx']
+    for k in range(0, len(src_idx), 3):
+        tri = (src_idx[k], src_idx[k + 1], src_idx[k + 2])
+        vs = [sheet_uv(src['pos'][i])[1] for i in tri]
+        straddles = max(vs) - min(vs) > 0.5
+        for i, v in zip(tri, vs):
+            turn = 1.0 if (straddles and v < 0.5) else 0.0
+            key = (i, turn)
+            if key not in seen:
+                seen[key] = len(pos)
+                p = src['pos'][i]
+                pos.append(p)
+                nrm.append(src['nrm'][i])
+                u, vv = sheet_uv(p)
+                uv.append((u, vv + turn))
+            idx.append(seen[key])
+    return dict(src, pos=pos, nrm=nrm, uv=uv, idx=idx)
+
+
 prims = []
 for pr in mesh['primitives']:
     prims.append({
@@ -190,6 +247,9 @@ for pr in mesh['primitives']:
         'idx': read(g, b, pr['indices']),
         'material': pr['material'],
     })
+for i, src in enumerate(prims):
+    if g['materials'][src['material']]['name'] in ENVELOPE_MATERIALS:
+        prims[i] = unwrap(src)
 
 def compact(src, tris, shift=(0.0, 0.0, 0.0)):
     """Keep only the vertices these triangles use, renumbered, moved onto the hinge."""
@@ -206,6 +266,8 @@ def compact(src, tris, shift=(0.0, 0.0, 0.0)):
             nt.append(seen[i])
         out.append(tuple(nt))
     return {'pos': pos, 'nrm': nrm, 'uv': uv, 'tris': out, 'material': src['material']}
+
+PAINT = {m: LIVERY for m in ENVELOPE_MATERIALS} if LIVERY else None
 
 taken = {name: [] for name, _, _ in PARTS}
 hull = []
@@ -227,10 +289,10 @@ os.makedirs(OUT, exist_ok=True)
 for name, _, hinge in PARTS:
     tris = taken[name]
     src = prims[12]
-    size = write_glb(os.path.join(OUT, "zlt_nt_%s.glb" % name), [compact(src, tris, hinge)], g, b, name)
+    size = write_glb(os.path.join(OUT, "zlt_nt_%s.glb" % name), [compact(src, tris, hinge)], g, b, name, paint=PAINT)
     print("%-14s %5d tris  hinge gltf=(%.2f %.2f %.2f)  ue=(%.2f %.2f %.2f)  %d bytes"
           % (name, len(tris), hinge[0], hinge[1], hinge[2], -hinge[2], hinge[0], hinge[1], size))
 
 body = [compact(prims[pi], tris) for pi, tris in hull]
-size = write_glb(os.path.join(OUT, "zlt_nt_airframe.glb"), body, g, b, "body")
+size = write_glb(os.path.join(OUT, "zlt_nt_airframe.glb"), body, g, b, "body", paint=PAINT)
 print("hull           %5d tris  %d bytes" % (sum(len(t['tris']) for t in body), size))
