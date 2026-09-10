@@ -63,7 +63,7 @@
  <property value="0.0">fcs/thrust-cmd-norm[2]</property>
 
  <!-- PteroSim Drive inputs: each shared command controls the governor and
-      blade pitch together.  Zero is stationary/neutral, one is full ahead. -->
+      blade pitch together. Zero is idle/neutral, one is full ahead. -->
  <property value="0.0">fcs/drive-throttle-norm[0]</property>
  <property value="0.0">fcs/drive-throttle-norm[1]</property>
  <property value="0.0">fcs/drive-throttle-norm[2]</property>
@@ -81,6 +81,31 @@
  <!--
  === Engine throttle control ================================
  -->
+ <!-- This package has no pilot mixture/ignition bindings. Supply full-rich
+      mixture below and use JSBSim's bound GLOBAL ignition/starter properties.
+      set-running alone cannot restart a stopped FGPiston. -->
+ <channel name="Automatic piston ignition and restart">
+  <switch name="fcs/etc/ignition">
+   <default value="3"/>
+   <output>propulsion/magnetos_cmd</output>
+  </switch>
+  <switch name="fcs/etc/automatic-starter">
+   <default value="0"/>
+   <test value="1" logic="AND">
+    fcs/drive-throttle-norm[0] GT 0.01
+    propulsion/engine[0]/propeller-rpm LT 250
+   </test>
+   <test value="1" logic="AND">
+    fcs/drive-throttle-norm[1] GT 0.01
+    propulsion/engine[1]/propeller-rpm LT 250
+   </test>
+   <test value="1" logic="AND">
+    fcs/drive-throttle-norm[2] GT 0.01
+    propulsion/engine[2]/propeller-rpm LT 250
+   </test>
+   <output>propulsion/starter_cmd</output>
+  </switch>
+ </channel>
  <channel name="Engine 1 throttle control">
 
   <!-- PteroSim starts the three piston engines through its engine start
@@ -274,15 +299,15 @@
  <channel name="Mixture control">
 
   <switch name="fcs/etc/mixture-pos-norm[0]">
-   <default value="fcs/mixture-cmd-norm[0]"/>
+   <default value="1.0"/>
    <output>fcs/mixture-pos-norm[0]</output>
   </switch>
   <switch name="fcs/etc/mixture-pos-norm[1]">
-   <default value="fcs/mixture-cmd-norm[1]"/>
+   <default value="1.0"/>
    <output>fcs/mixture-pos-norm[1]</output>
   </switch>
   <switch name="fcs/etc/mixture-pos-norm[2]">
-   <default value="fcs/mixture-cmd-norm[2]"/>
+   <default value="1.0"/>
    <output>fcs/mixture-pos-norm[2]</output>
   </switch>
 

@@ -277,11 +277,8 @@
 
   <!-- Experimental ballast setup. -->
   <!-- Center initial weigh-off ballast n=0 -->
-  <!-- The catalogue expected a Nasal weigh-off script to set this value.  PteroSim
-       does not run that script.  1070 kg is the neutral static load measured
-       between the catalogue's 2000 kg sink case and the empty rise case. -->
   <pointmass name="Ballast_Center">
-   <weight unit="KG"> 1070 </weight>
+   <weight unit="KG"> 2000 </weight>
    <location unit="M">
     <x>  37.5 </x>
     <y>   0.0 </y>
@@ -452,9 +449,9 @@
   -->
   <contact type="BOGEY" name="CAR_GEAR">
    <location unit="M">
-    <x>  19.56 </x>
+    <x>  20.00 </x>
     <y>   0.00 </y>
-    <z> -10.61 </z>
+    <z> -10.45 </z>
    </location>
    <static_friction>  0.8 </static_friction>
    <dynamic_friction> 0.5 </dynamic_friction>
@@ -468,9 +465,9 @@
 
   <contact type="BOGEY" name="REAR_GEAR">
    <location unit="M">
-    <x>  58.91 </x>
+    <x>  59.00 </x>
     <y>   0.00 </y>
-    <z>  -7.84 </z>
+    <z>  -7.65 </z>
    </location>
    <static_friction>  0.8 </static_friction>
    <dynamic_friction> 0.5 </dynamic_friction>
@@ -515,22 +512,6 @@
     <x> 57.3 </x>
     <y>  8.1 </y>
     <z> -4.1 </z>
-   </location>
-   <static_friction>  0.2 </static_friction>
-   <dynamic_friction> 0.2 </dynamic_friction>
-   <spring_coeff unit="N/M">      100000 </spring_coeff>
-   <damping_coeff unit="N/M/SEC">  20000 </damping_coeff>
-  </contact>
-
-  <!-- The hull sits 1.83 m below the lowest original wheel relative to the
-       computed CG.  This contact is its lowest centre keel point, so the
-       spawn fitter places the visual hull on the terrain instead of placing
-       only the wheel contacts there. -->
-  <contact type="STRUCTURE" name="HULL_KEEL">
-   <location unit="M">
-    <x> 37.5 </x>
-    <y>  0.0 </y>
-    <z> -7.05 </z>
    </location>
    <static_friction>  0.2 </static_friction>
    <dynamic_friction> 0.2 </dynamic_friction>

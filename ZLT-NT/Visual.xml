@@ -3,11 +3,11 @@
      37.5 m CG; engine and rudder anchors come directly from JSBSim's structural
      frame, whose X coordinate is aft from the bow. -->
 <visual>
-  <fixture file="meshes/zlt_nt_airframe.glb" xyz="0 0 0" rpy="0 0 0"/>
-  <propeller file="meshes/left_propeller.glb" xyz="0 0 0" rpy="0 90 0" motor="motor 0" axis="1 0 0"/>
-  <propeller file="meshes/right_propeller.glb" xyz="0 0 0" rpy="0 90 0" motor="motor 1" axis="1 0 0"/>
-  <propeller file="meshes/aft_main_propeller.glb" xyz="0 0 0" rpy="0 90 0" motor="motor 2" axis="1 0 0"/>
-  <propeller file="meshes/aft_aux_propeller.glb" xyz="0 0 0" rpy="-90 0 0" motor="motor 3" axis="0 1 0"/>
+  <fixture file="meshes/hindenburg_airframe.glb" xyz="0 0 0" rpy="0 0 0"/>
+  <propeller file="meshes/left_propeller.glb" xyz="0 0 0" rpy="0 0 0" motor="motor 0" axis="1 0 0"/>
+  <propeller file="meshes/right_propeller.glb" xyz="0 0 0" rpy="0 0 0" motor="motor 1" axis="1 0 0"/>
+  <propeller file="meshes/aft_main_propeller.glb" xyz="0 0 0" rpy="0 0 0" motor="motor 2" axis="1 0 0"/>
+  <propeller file="meshes/aft_aux_propeller.glb" xyz="0 0 0" rpy="0 0 0" motor="motor 3" axis="0 1 0"/>
   <surface file="meshes/left_rudder.glb" xyz="0 0 0" rpy="0 0 0" source="rudder" axis="0 0 1" hinge="-64.281 -3.342 -3.959" limit="20"/>
   <surface file="meshes/right_rudder.glb" xyz="0 0 0" rpy="0 0 0" source="rudder" axis="0 0 1" hinge="-64.281 3.342 -3.959" limit="20"/>
   <surface file="meshes/upper_rudder.glb" xyz="0 0 0" rpy="0 0 0" source="rudder" axis="0 0 1" hinge="-64.281 0 3.714" limit="20"/>
