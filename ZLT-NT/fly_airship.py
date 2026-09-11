@@ -2,7 +2,8 @@
 
   python fly_airship.py                 # keyboard, gamepad, or both
   python fly_airship.py --auto          # climbs, holds, descends and lands
-  python fly_airship.py --spawn         # spawn one first if the scene has none
+
+Spawn the airship in the editor first; this script only flies what is already there.
 
   command                              key           gamepad
   throttle, all three engines          W / S         left stick Y
@@ -72,18 +73,11 @@ class Airship:
         self.push()
 
 
-def connect(spawn):
+def connect():
     sim = PteroSim(GRPC)
     found = [a for a in sim.aircraft_status() if a.aircraft_name == AIRCRAFT]
-    if not found and not spawn:
-        sys.exit("No %s in the scene. Spawn one, or pass --spawn." % AIRCRAFT)
     if not found:
-        sim.stop()
-        for a in sim.aircraft_status():
-            sim.get_aircraft(a.instance_id).remove()
-        sim.spawn(AIRCRAFT, x=0.0, y=0.0, z=0.0, yaw=0.0)
-        time.sleep(2.0)
-        found = [a for a in sim.aircraft_status() if a.aircraft_name == AIRCRAFT]
+        sys.exit("No %s in the scene -- spawn one in the editor first." % AIRCRAFT)
 
     aircraft = sim.get_aircraft(found[0].instance_id)
     # Nobody else at the controls: a connected autopilot writes the same channels at
@@ -268,12 +262,11 @@ def fly_manual(sim, ship):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--auto", action="store_true", help="fly a climb-hold-land profile instead of flying it yourself")
-    ap.add_argument("--spawn", action="store_true", help="spawn the airship if the scene has none")
     ap.add_argument("--cruise", type=float, default=40.0, help="height above the spawn point, metres")
     ap.add_argument("--hold", type=float, default=60.0, help="seconds to hold up there")
     args = ap.parse_args()
 
-    sim, aircraft = connect(args.spawn)
+    sim, aircraft = connect()
     ship = Airship(aircraft)
     # Started before a single channel is sent: the engines are sized and the command
     # buffer created by the start, and controls arriving before it have nowhere to go.

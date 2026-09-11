@@ -10,11 +10,9 @@ python fly_airship.py                 # you fly it: keyboard, gamepad, or both
 python fly_airship.py --auto          # climbs, holds, descends and lands on its own
 ```
 
-| flag | what it does |
-| --- | --- |
-| `--spawn` | puts a ZLT-NT in the scene if there is none, clearing the other aircraft first; without it the script expects you to have spawned one in the editor |
-| `--cruise` | `--auto` only: height above the spawn point, metres (default 40) |
-| `--hold` | `--auto` only: seconds to hold at that height (default 60) |
+Spawn the airship in the editor first; the script flies what is already there. `--cruise` and
+`--hold` are the `--auto` profile's height in metres (default 40) and how long to stay there
+(default 60).
 
 Needs the `pterosim` SDK, and `pygame` to fly it yourself. A small window opens -- click it,
 that is where the keyboard focus lives.
