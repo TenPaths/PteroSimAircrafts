@@ -87,16 +87,30 @@ sheet[stripe_mask()] = GREY
 img = Image.fromarray(sheet)
 
 
-def ink(layer, xy, parts, flip=Image.FLIP_LEFT_RIGHT):
-    """Lay one line down as a single block, turned the way its flank turns the sheet."""
+# The envelope sheet is not square on the hull: 2048 px span 75.0 m along it and 1024 px span
+# the 44.3 m girth, so a tile drawn square must be widened by this before it goes on, or the
+# name comes out eighteen percent too tall.
+ASPECT = (W / 75.03) / (H / 44.3)
+
+
+def ink(layer, xy, parts, flip=Image.FLIP_LEFT_RIGHT, stretch=ASPECT):
+    """Lay one line down as a single block, turned the way its flank turns the sheet.
+
+    xy is the block's left edge and the line its ink is centred on, so a band flipped
+    top-to-bottom sits at the same height as one flipped left-to-right: placed by the tile's
+    corner instead, the port name came out 0.74 m nearer the crown than the starboard one.
+    """
     w = max(x + ImageFont.truetype(font, size).getbbox(text)[2] for text, font, size, x, _ in parts)
     h = max(y + size for _, _, size, _, y in parts) + 30
     tile = Image.new("RGBA", (w + 20, h), (0, 0, 0, 0))
     t = ImageDraw.Draw(tile)
     for text, font, size, x, y in parts:
         t.text((x, y), text, font=ImageFont.truetype(font, size), fill=GREY + (255,))
+    tile = tile.resize((max(1, int(tile.width * stretch)), tile.height), Image.LANCZOS)
     tile = tile.transpose(flip)
-    layer.alpha_composite(tile, xy)
+    box = tile.getbbox()
+    x, y = xy
+    layer.alpha_composite(tile, (x, y - (box[1] + box[3]) // 2))
     return tile.width
 
 
@@ -111,43 +125,40 @@ def flag(layer, xy):
 
 for v, flip in ((STARBOARD, Image.FLIP_LEFT_RIGHT), (PORT, Image.FLIP_TOP_BOTTOM)):
     layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    ink(layer, (NAME_AT, int(v * H) - 72), [("ZEPPELIN", BOLD, 132, 0, 0)], flip)
+    ink(layer, (NAME_AT, int(v * H)), [("ZEPPELIN", BOLD, 132, 0, 0)], flip)
     img.paste(layer, (0, 0), layer)
 
 out = sys.argv[1] if len(sys.argv) > 1 else "envelope.png"
 img.save(out)
 print("wrote", out, img.size)
 
-# The upper fin carries the papers, as the real one does. Its sheet is the fixed fin's own
-# chord: u from the leading edge to the hinge at every height, v down from the tip. The chord
-# at the lettering is 3.9 m across 1024 px and the span 5.1 m across 512, so a tile drawn
-# square is stretched 2.65 times along u before it goes on, or the letters come out narrow.
+# The upper fin carries the papers, as the real one does. Its sheet is rigid: u along z from
+# the leading-edge station, 11.4 m across 1024 px, v down the 5.1 m of span across 512. The
+# fixed fin is a swept parallelogram on it -- measured, its chord runs u = 0.116..0.552 at
+# r = 5.25 and 0.450..0.718 at r = 8.25 -- and the port face shows the sheet reversed about
+# u = 0.5, so a row has to fit the chord at its own height and that chord's mirror. At the
+# name's height that leaves u = 0.37..0.63; the rows below are laid out inside it.
 if len(sys.argv) > 2:
     FW, FH = 1024, 512
-    STRETCH = 2.65
+    FIN_ASPECT = (FW / 11.4) / (FH / 5.1)
 
-    def ink_fin(layer, xy, parts):
-        w = max(x + ImageFont.truetype(font, size).getbbox(text)[2] for text, font, size, x, _ in parts)
-        h = max(y + size for _, _, size, _, y in parts) + 20
-        tile = Image.new("RGBA", (w + 10, h), (0, 0, 0, 0))
-        t = ImageDraw.Draw(tile)
-        for text, font, size, x, y in parts:
-            t.text((x, y), text, font=ImageFont.truetype(font, size), fill=GREY + (255,))
-        tile = tile.resize((int(tile.width * STRETCH), tile.height), Image.LANCZOS)
-        tile = tile.transpose(Image.FLIP_LEFT_RIGHT)
-        layer.alpha_composite(tile, xy)
-        return tile.width
+    def ink_fin(layer, centre_x, centre_y, parts):
+        layer2 = Image.new("RGBA", (FW, FH), (0, 0, 0, 0))
+        w = ink(layer2, (0, centre_y), parts, Image.FLIP_LEFT_RIGHT, FIN_ASPECT)
+        layer.alpha_composite(layer2, (centre_x - w // 2, 0))
+        return w
 
     fin = Image.new("RGB", (FW, FH), WHITE)
     layer = Image.new("RGBA", (FW, FH), (0, 0, 0, 0))
-    ink_fin(layer, (115, 175), [("ZEPPELIN", BOLD, 52, 0, 0), ("Neue Technologie", PLAIN, 22, 2, 58)])
-    w = ink_fin(layer, (640, 118), [("D-LZNT", BOLD, 26, 0, 0)])
+    ink_fin(layer, FW // 2, 226, [("ZEPPELIN", BOLD, 50, 0, 0)])                # r = 6.9 m
+    ink_fin(layer, FW // 2, 262, [("Neue Technologie", PLAIN, 20, 0, 0)])
+    w = ink_fin(layer, FW // 2 + 30, 170, [("D-LZNT", BOLD, 24, 0, 0)])         # r = 7.4 m
     # The flag sits to the right of the registration in view, so left of it on the mirrored sheet.
-    tile = Image.new("RGBA", (int(54 * STRETCH), 30), (0, 0, 0, 0))
+    tile = Image.new("RGBA", (int(54 * FIN_ASPECT), 30), (0, 0, 0, 0))
     t = ImageDraw.Draw(tile)
     for i, band in enumerate(((0, 0, 0), (221, 0, 0), (255, 206, 0))):
         t.rectangle([0, i * 10, tile.width, i * 10 + 10], fill=band + (255,))
-    layer.alpha_composite(tile, (640 - tile.width - 16, 124))
+    layer.alpha_composite(tile, (FW // 2 + 30 - w // 2 - tile.width - 10, 170 - 15))
     fin.paste(layer, (0, 0), layer)
     fin.save(sys.argv[2])
     print("wrote", sys.argv[2], fin.size)

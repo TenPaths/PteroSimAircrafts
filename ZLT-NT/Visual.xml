@@ -9,16 +9,19 @@
 <visual>
   <fixture file="meshes/zlt_nt_airframe.glb" xyz="0 0 0" rpy="0 0 0"/>
 
-  <!-- The tail is an inverted Y: one fin up, two down at 112 degrees, hinged at the
+  <!-- The tail is an inverted Y: one fin up, two down at 115 degrees, hinged at the
        station where the mesh doubles, 29.9 m aft of the CG. The upper one steers,
        the lower pair carries the elevator, which is how a Y tail works. The FCS
        travel is 20 degrees each way. -->
-  <surface file="meshes/zlt_nt_rudder_upper.glb" xyz="0 0 0" rpy="0 0 0" source="rudder" axis="0 0 1" hinge="-29.90 0 11.93" limit="20"/>
+  <!-- Axis down, not up: the core reports the rudder as -dr, and JSBSim's +dr is trailing edge
+       left, so about +Z a right pedal swung the trailing edge left. Same reason the converter
+       points every rudder's axis down. -->
+  <surface file="meshes/zlt_nt_rudder_upper.glb" xyz="0 0 0" rpy="0 0 0" source="rudder" axis="0 0 -1" hinge="-29.90 0 11.93" limit="20"/>
   <!-- The lower pair share one sign: a rotation is a pseudo-vector, so the starboard axis is the port
        one negated rather than mirrored -- mirrored, the same elevator sent one trailing edge up and
        the other down. Both now go down together on a positive elevator, as the FCS means it. -->
-  <surface file="meshes/zlt_nt_rudder_port.glb" xyz="0 0 0" rpy="0 0 0" source="elevator" axis="0 -0.927 -0.375" hinge="-29.90 -7.46 0.86" limit="20"/>
-  <surface file="meshes/zlt_nt_rudder_stbd.glb" xyz="0 0 0" rpy="0 0 0" source="elevator" axis="0 -0.927 0.375" hinge="-29.90 7.46 0.86" limit="20"/>
+  <surface file="meshes/zlt_nt_rudder_port.glb" xyz="0 0 0" rpy="0 0 0" source="elevator" axis="0 -0.906 -0.423" hinge="-29.90 -7.30 0.48" limit="20"/>
+  <surface file="meshes/zlt_nt_rudder_stbd.glb" xyz="0 0 0" rpy="0 0 0" source="elevator" axis="0 -0.906 0.423" hinge="-29.90 7.30 0.48" limit="20"/>
 
   <!-- Vectored thrust: the housings swivel with the engines they carry, so they are
        hinged where JSBSim swings the thrust and the blades ride on them. The side

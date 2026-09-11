@@ -115,7 +115,7 @@ def write_glb(path, prims, src_json, src_bin, node_name="part", translation=None
                     if k.endswith('Texture') and 'index' in v:
                         v['index'] = add_texture(v['index'])
                     stack.append(v)
-        if png:
+        if png and not paint_as:
             # The sheet replaces whatever the model shipped: these materials carried a
             # 169-byte placeholder or nothing at all, and a white hull is not a livery.
             pbr = mat.setdefault('pbrMetallicRoughness', {})
@@ -221,8 +221,10 @@ def aft_nacelle(p):
 PARTS = [
     # name, predicate, hinge point in glTF coordinates
     ("rudder_upper", in_fin(-12, 12), (0.0, YAX + ARM, HINGE_Z)),
-    ("rudder_port", in_fin(-128, -100), (ARM * math.sin(math.radians(-112)), YAX + ARM * math.cos(math.radians(-112)), HINGE_Z)),
-    ("rudder_stbd", in_fin(100, 128), (ARM * math.sin(math.radians(112)), YAX + ARM * math.cos(math.radians(112)), HINGE_Z)),
+    # The lower fins lie 115 degrees off the crown -- measured on the mesh, not the 112 first
+    # assumed -- and a hinge 3 degrees out of a fin's plane walks its rudder tip 0.2 m at full travel.
+    ("rudder_port", in_fin(-128, -100), (ARM * math.sin(math.radians(-115)), YAX + ARM * math.cos(math.radians(-115)), HINGE_Z)),
+    ("rudder_stbd", in_fin(100, 128), (ARM * math.sin(math.radians(115)), YAX + ARM * math.cos(math.radians(115)), HINGE_Z)),
     # Hinged where JSBSim swings the thrust, so the blade the core hangs off this mesh lands on its shaft.
     # Hinged a little aft of the bulb's middle: the nose with the propeller swings up, the
     # tail dips, and neither reaches the pylon.
@@ -327,16 +329,6 @@ FIN_LE, FIN_TE = 21.0, 32.4   # the upper fin's leading edge and the rudder's tr
 CLAMP = 33071                 # glTF CLAMP_TO_EDGE: past the hinge the fin sheet holds its last column, white
 
 
-def fin_chord(r):
-    """The fixed fin's leading edge and hinge at a radius, as fractions of FIN_LE..FIN_TE.
-
-    Both are swept: measured on the mesh, the chord runs u = 0.116..0.552 at r = 5.25 and
-    0.450..0.718 at r = 8.25. Lettering laid out against the sheet's own u met the hinge on
-    one face and the leading edge on the other; laid out against this chord it meets neither.
-    """
-    return 0.116 + 0.111 * (r - 5.25), 0.552 + 0.0553 * (r - 5.25)
-
-
 def upper_fin(p):
     """The fixed part of the upper fin: the sheet ahead of the rudder hinge."""
     x, y, z = p
@@ -344,17 +336,35 @@ def upper_fin(p):
 
 
 def fin_uv(prim, shift=(0.0, 0.0, 0.0)):
-    """A flat sheet for the fin: u across the fixed chord, 0 at the leading edge and 1 at the
-    hinge whatever the height, v down from the tip. The port face has u reversed, so one sheet
-    reads true from both sides. The rudder continues past u = 1 into the clamped edge: white.
+    """A flat sheet for the fin: u along z from the leading-edge station, v down from the tip.
+
+    Rigid, not fitted to the chord: the leading edge and the hinge are both swept, and a sheet
+    stretched to the chord at every height sheared every glyph forty degrees. Laid out rigidly
+    the lettering has to sit where the chord is at its own height, which livery.py does.
+
+    The port face has u reversed, so one sheet reads true from both sides. Which face a vertex
+    belongs to is decided per triangle, by where the triangle's corners lie on average: the
+    ridge vertices along the leading edge, the tip and the trailing edge sit at |x| below a
+    micrometre with float-noise signs, and judged one by one they handed the edge triangles
+    corners from both faces, which smeared the whole sheet into a strip along every edge. A
+    ridge vertex used by both faces is written twice, once per side.
     """
-    uv = []
-    for x, y, z in prim['pos']:
-        r = math.hypot(x, y + shift[1] - YAX)
-        le, te = fin_chord(r)
-        u = ((z + shift[2] - FIN_LE) / (FIN_TE - FIN_LE) - le) / (te - le)
-        uv.append((1.0 - u if x < 0 else u, 1.0 - (r - 4.0) / (9.1 - 4.0)))
-    return dict(prim, uv=uv, paint_as=('Fin', FIN_SHEET, CLAMP))
+    pos, nrm, tris = prim['pos'], prim['nrm'], prim['tris']
+    seen, npos, nnrm, nuv, ntris = {}, [], [], [], []
+    for t in tris:
+        side = -1 if sum(pos[i][0] for i in t) < 0.0 else 1
+        nt = []
+        for i in t:
+            if (i, side) not in seen:
+                seen[(i, side)] = len(npos)
+                x, y, z = pos[i]
+                u = (z + shift[2] - FIN_LE) / (FIN_TE - FIN_LE)
+                npos.append(pos[i])
+                nnrm.append(nrm[i])
+                nuv.append((1.0 - u if side < 0 else u, 1.0 - (math.hypot(x, y + shift[1] - YAX) - 4.0) / (9.1 - 4.0)))
+            nt.append(seen[(i, side)])
+        ntris.append(tuple(nt))
+    return dict(prim, pos=npos, nrm=nnrm, uv=nuv, tris=ntris, paint_as=('Fin', FIN_SHEET, CLAMP))
 
 
 os.makedirs(OUT, exist_ok=True)
