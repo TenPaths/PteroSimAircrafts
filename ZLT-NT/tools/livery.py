@@ -15,7 +15,8 @@ so that band is flipped top-to-bottom. Capitals flipped top-to-bottom look mirro
 which is why the port band resisted every left-right mirror it was given. Nothing is
 moved along u, which keeps the same word at the same station on either side.
 
-  python tools/livery.py textures/envelope.png textures/fin_stbd.png textures/fin_port.png
+  python tools/livery.py textures/envelope.png textures/fin_stbd.png textures/fin_port.png \
+                         textures/rudder_stbd.png textures/rudder_port.png
 """
 import math, sys
 from PIL import Image, ImageDraw, ImageFont
@@ -107,6 +108,9 @@ def ink(layer, xy, parts, flip=Image.FLIP_LEFT_RIGHT, stretch=ASPECT):
     for text, font, size, x, y in parts:
         t.text((x, y), text, font=ImageFont.truetype(font, size), fill=GREY + (255,))
     tile = tile.resize((max(1, int(tile.width * stretch)), tile.height), Image.LANCZOS)
+    # Cropped to the ink before the flip: mirrored with its padding on, the tile's ink moved
+    # by the padding, and the starboard name stood 1.2 m aft of the port one.
+    tile = tile.crop(tile.getbbox())
     tile = tile.transpose(flip)
     box = tile.getbbox()
     x, y = xy
@@ -139,7 +143,7 @@ print("wrote", out, img.size)
 # plain for port -- so nothing has to fit a chord and its mirror at once. The sheet is rigid:
 # u along the hull from the leading-edge station, 11.4 m across 1024 px, v down the 5.1 m of
 # span across 512, and a tile drawn square is narrowed to that aspect before it goes on.
-if len(sys.argv) > 3:
+if len(sys.argv) > 5:
     FW, FH = 1024, 512
     FIN_ASPECT = (FW / 11.4) / (FH / 5.1)
     NARROW_BOLD = "C:/Windows/Fonts/ARIALNB.TTF"
@@ -164,15 +168,20 @@ if len(sys.argv) > 3:
         b = tile.getbbox()
         layer.alpha_composite(tile, (fin_x(right_u) - b[2], fin_y(r) - (b[1] + b[3]) // 2))
 
-    for path, mirror in ((sys.argv[2], True), (sys.argv[3], False)):
+    # Four sheets: the lettered pair for the fixed fin, and a flag-only pair for the rudder,
+    # whose nose sits inside the fin's fairing at rest and swings out of it under deflection --
+    # lettered, it showed the row ends a second time at full rudder.
+    for path, mirror, lettered in ((sys.argv[2], True, True), (sys.argv[3], False, True),
+                                   (sys.argv[4], True, False), (sys.argv[5], False, False)):
         fin = Image.new("RGB", (FW, FH), WHITE)
         layer = Image.new("RGBA", (FW, FH), (0, 0, 0, 0))
         # High on the fin, as on the ship, every row ending at the seam a viewer sees: the aft
         # row of the hinge fairing, z = 30.36 at every height, u = 0.82 -- so the rows end in
         # one straight line, as they do on the ship.
-        stamp(layer, 0.810, 7.85, "ZEPPELIN", NARROW_BOLD, 0.48, mirror)
-        stamp(layer, 0.810, 7.30, "Neue Technologie", NARROW, 0.17, mirror)
-        stamp(layer, 0.810, 8.35, "D-LZNT", NARROW, 0.26, mirror)
+        if lettered:
+            stamp(layer, 0.810, 7.85, "ZEPPELIN", NARROW_BOLD, 0.48, mirror)
+            stamp(layer, 0.810, 7.30, "Neue Technologie", NARROW, 0.17, mirror)
+            stamp(layer, 0.810, 8.35, "D-LZNT", NARROW, 0.26, mirror)
         # The flag, on the rudder. Not right behind the hinge: at this height the fixed fin's
         # trailing edge is swept forward of the rudder's cut, and a flag at u = 0.73 fell into
         # that gap and showed as a black sliver. A flag reads the same either way round.

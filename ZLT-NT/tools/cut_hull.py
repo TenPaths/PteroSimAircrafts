@@ -185,6 +185,9 @@ OUT = sys.argv[2]
 LIVERY = sys.argv[3] if len(sys.argv) > 3 else None    # a PNG for the envelope, laid out by sheet_uv
 # Two PNGs for the upper fin, one per face, laid out by fin_uv: starboard then port.
 FIN_SHEETS = (sys.argv[4], sys.argv[5]) if len(sys.argv) > 5 else None
+# The rudder's copies carry the flag only: with the lettered sheet, the row ends drawn on its
+# nose -- hidden in the fairing at rest -- showed a second time when it swung out.
+RUDDER_SHEETS = (sys.argv[6], sys.argv[7]) if len(sys.argv) > 7 else FIN_SHEETS
 POD = ('Pod', None, None)     # plain white: the pods and their pylons carry no livery
 YAX = 3.88
 HINGE_Z = 29.9      # the fin sheet doubles here: forward of it the fixed fin, aft of it the rudder
@@ -215,15 +218,20 @@ def side_nacelle(sign):
         return x * sign > 8.3 and y < 2.0 and -9.3 < z < -7.15
     return f
 
-def aft_nacelle(p):
-    """The aft shaft and spinner, which turn with the tail engine.
+SPINNER = 40.50    # the shaft leaves the tail cone at 40.43 and the spinner starts at 40.53
 
-    Not the cone ahead of them: that is the lateral thruster's housing, offset to port at
-    z = 39.0..39.5, and it is fixed -- its own propeller hangs off the hull, so cut with the
-    shaft the housing tilted away from its blade.
+
+def aft_nacelle(p):
+    """The spinner the tail propeller sits on, and nothing else.
+
+    On the ship the tail cone is fixed and only the gear housing on its end swivels -- see the
+    photographs. Cut with the cone, the whole tail swung; cut with the shaft, the half of the
+    shaft still inside the cone swung out through its wall. The spinner starts where the shaft
+    leaves the cone, which is also where the propeller sits, so both turn about that point.
     """
     x, y, z = p
-    return z >= 39.9 and math.hypot(x, y - YAX) < 0.5
+    return z >= SPINNER and math.hypot(x, y - YAX) < 0.5
+
 
 PARTS = [
     # name, predicate, hinge point in glTF coordinates
@@ -233,10 +241,13 @@ PARTS = [
     ("rudder_port", in_fin(-128, -100), (ARM * math.sin(math.radians(-115)), YAX + ARM * math.cos(math.radians(-115)), HINGE_Z)),
     ("rudder_stbd", in_fin(100, 128), (ARM * math.sin(math.radians(115)), YAX + ARM * math.cos(math.radians(115)), HINGE_Z)),
     # Hinged where JSBSim swings the thrust, so the blade the core hangs off this mesh lands on its shaft.
-    # Hinged a little aft of the bulb's middle: the nose with the propeller swings up, the
-    # tail dips, and neither reaches the pylon.
-    ("nacelle_port", side_nacelle(-1), (-8.53, 0.38, -8.45)),
-    ("nacelle_stbd", side_nacelle(1), (8.53, 0.38, -8.45)),
+    # Hinged on the pylon's axis: where the pylon enters the bulb, |x| = 8.3, its section is
+    # an ellipse 0.15 by 1.14 m centred at y 0.385, z -8.22, and the bulb turns about that
+    # line. Hinged 0.45 m ahead of it the joint swung away and the pylon stood in the air.
+    ("nacelle_port", side_nacelle(-1), (-8.53, 0.385, -8.22)),
+    ("nacelle_stbd", side_nacelle(1), (8.53, 0.385, -8.22)),
+    # Hinged at the cone's base on the cap, so the cone pivots where it stands and the shaft
+    # and propeller swing with it -- the real ship's tail propeller swings down for lift.
     ("nacelle_aft", aft_nacelle, (0.0, YAX, 40.53)),
 ]
 
@@ -317,20 +328,29 @@ PAINT = {m: LIVERY for m in ENVELOPE_MATERIALS if m != 'Envelope'} if LIVERY els
 CUT_FROM = 'Envelope.002'
 
 taken = {name: [] for name, _, _ in PARTS}
+taken_from = {}
+prim_tris = {}
 hull = []
 for pi, src in enumerate(prims):
     idx = src['idx']
     kept = []
-    cuttable = g['materials'][src['material']]['name'] == CUT_FROM
+    material = g['materials'][src['material']]['name']
+    prim_tris[pi] = {(idx[k], idx[k + 1], idx[k + 2]) for k in range(0, len(idx), 3)}
     for k in range(0, len(idx), 3):
         t = (idx[k], idx[k + 1], idx[k + 2])
+        tri = [src['pos'][i] for i in t]
         where = None
-        if cuttable:
-            for name, pred, _ in PARTS:
-                if all(pred(src['pos'][i]) for i in t):
-                    where = name
-                    break
-        (taken[where] if where else kept).append(t)
+        for name, pred, _ in PARTS:
+            if material != CUT_FROM:
+                continue
+            if all(pred(p) for p in tri):
+                where = name
+                break
+        if where:
+            taken[where].append(t)
+            taken_from.setdefault(where, set()).add(pi)
+        else:
+            kept.append(t)
     if kept:
         hull.append((pi, kept))
 
@@ -352,7 +372,7 @@ def upper_fin(p):
     return FIN_LE < z < FIN_COVE and math.hypot(x, y - YAX) > FIN_R and -12 < bearing(x, y) < 12
 
 
-def fin_uv(prim, shift=(0.0, 0.0, 0.0)):
+def fin_uv(prim, shift=(0.0, 0.0, 0.0), sheets=None):
     """The fin on flat sheets: u along z from the leading-edge station, v down from the tip.
 
     Rigid, not fitted to the chord: the leading edge and the hinge are both swept, and a sheet
@@ -368,7 +388,8 @@ def fin_uv(prim, shift=(0.0, 0.0, 0.0)):
     """
     pos, nrm, tris = prim['pos'], prim['nrm'], prim['tris']
     faces = []
-    for side, name, sheet in ((1, 'FinStbd', FIN_SHEETS[0]), (-1, 'FinPort', FIN_SHEETS[1])):
+    sheets = sheets or FIN_SHEETS
+    for side, name, sheet in ((1, 'FinStbd', sheets[0]), (-1, 'FinPort', sheets[1])):
         seen, npos, nnrm, nuv, ntris = {}, [], [], [], []
         for t in tris:
             if (-1 if sum(pos[i][0] for i in t) < 0.0 else 1) != side:
@@ -407,16 +428,21 @@ def car(p):
 
 os.makedirs(OUT, exist_ok=True)
 for name, _, hinge in PARTS:
-    tris = taken[name]
-    src = prims[12]
-    parts = [compact(src, tris, hinge)]
+    # A part may gather triangles from more than one primitive (the tail nacelle: cone from
+    # the body of revolution, shaft from the sheet); each set keeps its own vertices.
+    parts = []
+    for pi in sorted(taken_from.get(name, ())):
+        src = prims[pi]
+        tris = [t for t in taken[name] if t in prim_tris[pi]]
+        parts.append(compact(src, tris, hinge))
     if name == "rudder_upper" and FIN_SHEETS:
-        parts = fin_uv(parts[0], hinge)   # the rudder continues the fin's sheets, so the flag can sit on it
+        parts = fin_uv(parts[0], hinge, RUDDER_SHEETS)   # the rudder continues the fin's sheets, with the flag only
     if name.startswith("nacelle"):
-        parts[0]['paint_as'] = POD
+        for part in parts:
+            part['paint_as'] = POD
     size = write_glb(os.path.join(OUT, "zlt_nt_%s.glb" % name), parts, g, b, name, paint=PAINT)
     print("%-14s %5d tris  hinge gltf=(%.2f %.2f %.2f)  ue=(%.2f %.2f %.2f)  %d bytes"
-          % (name, len(tris), hinge[0], hinge[1], hinge[2], -hinge[2], hinge[0], hinge[1], size))
+          % (name, len(taken[name]), hinge[0], hinge[1], hinge[2], -hinge[2], hinge[0], hinge[1], size))
 
 body = []
 for pi, tris in hull:
