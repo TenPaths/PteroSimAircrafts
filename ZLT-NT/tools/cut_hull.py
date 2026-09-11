@@ -390,9 +390,13 @@ def fin_uv(prim, shift=(0.0, 0.0, 0.0)):
 
 
 def pylon(p):
-    """The side pods' pylons, left on the hull when the pods are cut: white, like the pods."""
+    """The side pods' pylons and their root fairings, left on the hull when the pods are cut:
+    white, like the pods. The fairing reaches in to |x| = 5.5, inside the hull's own skin at
+    that height (6.1); taken from 7.0 outward it left a grey cup at the root, painted by the
+    stripe. The skin itself is Envelope.003 and keeps the stripe behind the pod.
+    """
     x, y, z = p
-    return abs(x) > 7.0 and y < 2.0 and -9.6 < z < -6.2
+    return abs(x) > 5.4 and y < 2.0 and -9.6 < z < -6.2
 
 
 def car(p):
