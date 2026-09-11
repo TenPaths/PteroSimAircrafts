@@ -6,4 +6,5 @@
   <sensor type="barometer" name="air_pressure_sensor" xyz="0 0 0" rpy="0 0 0" hz="50" white_noise_sigma="0.0001"/>
   <sensor type="gps" name="navsat_sensor" xyz="0 0 0" rpy="0 0 0" hz="30"/>
   <sensor type="airspeed" name="airspeed" xyz="0 0 0" rpy="0 0 0" hz="50"/>
+  <sensor type="camera" name="camera" xyz="15.47 0 -3.96" synchronous_capture="true"/>
 </sensors>

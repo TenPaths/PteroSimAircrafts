@@ -36,4 +36,6 @@
   <propeller file="meshes/right_propeller.glb" xyz="0 0 0" rpy="0 90 0" motor="motor 1" axis="1 0 0"/>
   <propeller file="meshes/aft_main_propeller.glb" xyz="0 0 0" rpy="0 90 0" motor="motor 2" axis="1 0 0"/>
   <propeller file="meshes/aft_aux_propeller.glb" xyz="0 0 0" rpy="-90 0 0" motor="motor 3" axis="0 1 0"/>
+  <chase xyz="0 0 0" rpy="0 -15 0" length="60"/>
+
 </visual>
