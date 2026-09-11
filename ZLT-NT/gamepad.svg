@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 430" width="820" height="430" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <rect width="820" height="430" fill="#ffffff"/>
+
+  <!-- body -->
+  <g fill="#dfe4ea" stroke="#2f353d" stroke-width="2.5">
+    <path d="M300 150 h220 a58 58 0 0 1 58 58 v22 c0 60 -26 104 -62 104 c-30 0 -44 -26 -60 -40
+             h-92 c-16 14 -30 40 -60 40 c-36 0 -62 -44 -62 -104 v-22 a58 58 0 0 1 58 -58 z"/>
+    <rect x="292" y="118" width="74" height="30" rx="13"/>
+    <rect x="454" y="118" width="74" height="30" rx="13"/>
+  </g>
+
+  <!-- d-pad -->
+  <g fill="#aeb6c0" stroke="#2f353d" stroke-width="2">
+    <rect x="316" y="178" width="20" height="54" rx="4"/>
+    <rect x="299" y="195" width="54" height="20" rx="4"/>
+  </g>
+
+  <!-- face buttons: 0 and 1 labelled, the other two left plain -->
+  <g stroke="#2f353d" stroke-width="2">
+    <circle cx="487" cy="205" r="12" fill="#aeb6c0"/>
+    <circle cx="513" cy="231" r="12" fill="#8fa8d8"/>
+    <circle cx="461" cy="231" r="12" fill="#8fa8d8"/>
+    <circle cx="487" cy="257" r="12" fill="#aeb6c0"/>
+  </g>
+  <g font-size="12" fill="#1c2126" text-anchor="middle">
+    <text x="461" y="235">0</text>
+    <text x="513" y="235">1</text>
+  </g>
+
+  <!-- sticks -->
+  <g stroke="#2f353d" stroke-width="2.5">
+    <circle cx="357" cy="262" r="27" fill="#c6ccd4"/>
+    <circle cx="357" cy="262" r="16" fill="#9aa3ad"/>
+    <circle cx="463" cy="300" r="27" fill="#c6ccd4"/>
+    <circle cx="463" cy="300" r="16" fill="#9aa3ad"/>
+  </g>
+
+  <!-- options button (7) -->
+  <rect x="399" y="186" width="22" height="13" rx="6" fill="#aeb6c0" stroke="#2f353d" stroke-width="2"/>
+
+  <!-- leaders -->
+  <g stroke="#5b636d" stroke-width="1.6" fill="none">
+    <path d="M292 128 H150"/>
+    <path d="M330 262 H150"/>
+    <path d="M528 128 H672"/>
+    <path d="M499 231 H672"/>
+    <path d="M490 300 H672"/>
+    <path d="M410 186 V80"/>
+  </g>
+
+  <!-- labels -->
+  <g font-size="15" fill="#1c2126">
+    <text x="144" y="124" text-anchor="end">triggers</text>
+    <text x="144" y="142" text-anchor="end" fill="#4d5560">nacelles up / down</text>
+
+    <text x="144" y="257" text-anchor="end">left stick</text>
+    <text x="144" y="275" text-anchor="end" fill="#4d5560">up/down throttle</text>
+    <text x="144" y="293" text-anchor="end" fill="#4d5560">left/right yaw</text>
+
+    <text x="680" y="124">triggers</text>
+    <text x="680" y="142" fill="#4d5560">either one works</text>
+
+    <text x="680" y="227">buttons 0 / 1</text>
+    <text x="680" y="245" fill="#4d5560">ballonets vent / fill</text>
+
+    <text x="680" y="296">right stick</text>
+    <text x="680" y="314" fill="#4d5560">up/down elevator</text>
+
+    <text x="410" y="54" text-anchor="middle">button 7</text>
+    <text x="410" y="72" text-anchor="middle" fill="#4d5560">stop</text>
+  </g>
+
+  <text x="410" y="404" font-size="13" fill="#4d5560" text-anchor="middle">
+    Throttle and nacelles hold where you leave them; the sticks spring back to centre.
+  </text>
+</svg>

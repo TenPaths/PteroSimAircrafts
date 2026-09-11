@@ -1,30 +1,20 @@
-"""Fly the ZLT-NT airship by hand. This package ships no autopilot airframe, and
-that is the point.
+"""Fly the ZLT-NT airship by hand, or let it fly a profile on its own.
 
-  python fly_airship.py            # you fly it, from the keyboard or a gamepad
-  python fly_airship.py --auto     # climb, hold, descend and land, unattended
+  python fly_airship.py                 # keyboard, gamepad, or both
+  python fly_airship.py --auto          # climbs, holds, descends and lands
+  python fly_airship.py --spawn         # spawn one first if the scene has none
 
-Keyboard: W/S throttle, Space cuts it, A/D yaw, Up/Down elevator, Q/E nacelles up/down,
-Z/X vent/fill the ballonets, Esc stops. A gamepad, if one is plugged in, works at the same
-time: left stick throttle and yaw, right stick elevator, triggers the nacelles.
+  command                              key           gamepad
+  throttle, all three engines          W / S         left stick Y
+  throttle - cut                       Space
+  yaw: rudders and lateral thruster    A / D         left stick X
+  elevator: nose up / down             Up / Down     right stick Y
+  nacelles up / down                   Q / E         triggers
+  ballonets - vent / fill              Z / X         buttons 0 / 1
+  stop                                 Esc           button 7
 
-PX4's airship module offers a forward thrust and two moments and nothing else: no
-vectored thrust, no elevator, no ballonets -- so under it the ship can only drive
-forward, which is not how an airship leaves the ground. This one has all three, its
-own flight control system already drives them, and SetActuatorControls reaches them
-straight.
-
-Lift-off is vectored thrust, and the two nacelle levers must not move together. The
-side pair sits 8.9 m ahead of the centre of gravity and the aft one 40.5 m behind it,
-so equal vertical thrust is a nose-down moment of more than two to one: the ship
-climbs with its nose swinging between +4 and -16 degrees. Split them the way LIFT
-below does -- side at 0.75 of its 120 deg travel, aft at 0.36 of its 90 -- and the
-moments cancel: measured pitch then stays inside one degree the whole way up.
-
-Ballonets do not lift this model. Their valves flow with the pressure difference
-across the cell, and vented at altitude for two minutes they changed the descent rate
-by nothing measurable. The ship flies heavy, as the real one does, and the engines
-carry it.
+Throttle and nacelles are levers and hold where they are left; yaw and elevator spring
+back. See README.md for what the ship does with all this.
 """
 
 import argparse
@@ -43,8 +33,8 @@ YAW, SIDE_SWIVEL, REAR_SWIVEL, ELEVATOR = 3, 4, 5, 6
 BALLONET_FWD, BALLONET_AFT = 7, 8
 CHANNELS = 9
 
-# Straight up, and balanced: 0.75 of the side travel is 90 deg, 0.36 of the aft is 32.
-# The aft one stops short on purpose -- see the moment arithmetic above.
+# Straight up, and balanced: 0.75 of the side travel is 90 deg, 0.36 of the aft is 32. The
+# aft one stops short on purpose -- equal thrust would be a two-to-one nose-down moment.
 LIFT_SIDE, LIFT_AFT = 0.75, 0.36
 
 
@@ -186,10 +176,7 @@ PAD = [
 def fly_manual(sim, ship):
     """Keyboard, gamepad, or both at once -- whichever moves wins each channel.
 
-    A window is opened because that is where the keyboard focus lives; it also shows the
-    keys and what the levers are doing, which beats reading them off the terminal while
-    flying. The throttle and the nacelles are levers, held where they are left; the rudder
-    and the elevator spring back, as a stick does.
+    The window is where the keyboard focus lives; it also shows the levers and the ship.
     """
     import pygame
 

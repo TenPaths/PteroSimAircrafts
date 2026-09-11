@@ -1,84 +1,62 @@
 # ZLT-NT
 
-A Zeppelin NT airship for PteroSim: JSBSim flight model by Anders Gidenstam (GPL-2.0-or-later,
-see LICENSE and NOTICE), fitted here with visuals, a livery and a script to fly it by hand.
+A Zeppelin NT airship. JSBSim flight model by Anders Gidenstam (GPL-2.0-or-later, see LICENSE
+and NOTICE); visuals, livery and the flying script are this package's.
 
-## Flying it
-
-The package ships no autopilot airframe, and that is the point: PX4's airship module offers a
-forward thrust and two moments, and an airship leaves the ground by vectoring its engines --
-which no autopilot output maps to. `fly_airship.py` drives the nine channels directly.
+## Run it
 
 ```
-python fly_airship.py --auto --spawn      # climb to 40 m, hold, descend and land, unattended
-python fly_airship.py                     # you fly it: keyboard, gamepad, or both
+python fly_airship.py                 # you fly it: keyboard, gamepad, or both
+python fly_airship.py --auto          # climbs, holds, descends and lands on its own
 ```
 
-Spawn the airship in the editor first, or pass `--spawn` to have the script do it. `--cruise`
-and `--hold` set the height in metres and how long to hold there. The script needs the
-`pterosim` SDK on the path, and `pygame` for flying it yourself.
-
-Without `--auto` a small window opens: click it, because that is where the keyboard focus
-lives, and it shows the levers and the ship's state while you fly. A gamepad, if one is
-plugged in, works at the same time -- each channel takes whichever of the two is moving.
-
-The throttle and the nacelles are levers: they stay where you leave them. The rudder and the
-elevator spring back to centre, as a stick does.
-
-### Keyboard
-
-| key | does |
+| flag | what it does |
 | --- | --- |
-| `W` / `S` | throttle up / down, all three engines |
-| `Space` | throttle to zero |
-| `A` / `D` | yaw left / right: rudders and the lateral thruster |
-| `Up` / `Down` | elevator: nose up / down |
-| `Q` / `E` | nacelles up / down -- `Q` to the balanced lift setting, `E` back to level |
-| `Z` / `X` | ballonets: vent / fill |
-| `Esc` | stop |
+| `--spawn` | puts a ZLT-NT in the scene if there is none, clearing the other aircraft first; without it the script expects you to have spawned one in the editor |
+| `--cruise` | `--auto` only: height above the spawn point, metres (default 40) |
+| `--hold` | `--auto` only: seconds to hold at that height (default 60) |
 
-### Gamepad
+Needs the `pterosim` SDK, and `pygame` to fly it yourself. A small window opens -- click it,
+that is where the keyboard focus lives.
 
-| control | does |
-| --- | --- |
-| left stick, up/down | throttle |
-| left stick, left/right | yaw |
-| right stick, up/down | elevator |
-| triggers | nacelles: released is level flight, pulled is straight up and balanced |
-| buttons 0 / 1 | vent / fill the ballonets |
-| button 7 | stop |
+## Controls
 
-### Taking off by hand
+![gamepad layout](gamepad.svg)
 
-Open the throttle with `W` and let the engines spool for three or four seconds, then hold `Q`
-until the nacelles read 1.00 -- the swivel actuator takes about four seconds for full travel.
-The ship climbs at 0.7 m/s with the nose within a degree of level. To come down, `E` back to
-level flight and ease the throttle off; to land, cut it with `Space` and let it settle on its
-wheels, which it does at four degrees nose-up.
+| command | key | gamepad |
+| --- | --- | --- |
+| Throttle, all three engines | `W` / `S` | left stick Y |
+| Throttle - cut | `Space` | |
+| Yaw: rudders and lateral thruster | `A` / `D` | left stick X |
+| Elevator: nose up / down | `Up` / `Down` | right stick Y |
+| Nacelles up / down | `Q` / `E` | triggers |
+| Ballonets - vent / fill | `Z` / `X` | buttons 0 / 1 |
+| Stop | `Esc` | button 7 |
 
-## Two things worth knowing before you fly
+Throttle and nacelles are levers and hold where you leave them; yaw and elevator spring back.
+Both inputs work at once -- each channel follows whichever is moving.
 
-**The nacelle levers must not move together.** The side pair sits 8.9 m ahead of the centre of
-gravity and the aft one 40.5 m behind it, so equal vertical thrust is a nose-down moment of
-more than two to one: with both at 90 degrees the ship climbs with its nose swinging between
-+4 and -16 degrees. The script's single lift lever splits them -- side at 0.75 of its 120
-degree travel, aft at 0.36 of its 90 -- and the moments cancel. Measured over a 70 second
-climb:
+To take off: throttle up, let the engines spool three or four seconds, then hold `Q` to 1.00 --
+the swivel takes about four seconds. It climbs at 0.7 m/s with the nose within a degree of
+level. `E` back to level and ease off to descend; cut the throttle to land, it settles on its
+wheels at four degrees nose-up.
 
-| side / aft | climb | mean pitch | pitch range |
-| --- | --- | --- | --- |
-| 0.75 / 1.00 | 20.8 m | -9.5 deg | 13.9 deg |
-| 0.75 / 0.36 | 34.3 m | +0.5 deg | 1.9 deg |
+## Worth knowing
 
-**Ballonets do not lift this model.** Their valves flow with the pressure difference across the
-cell, and vented at altitude for two minutes they changed the descent rate by nothing
-measurable. The ship flies heavy, as the real one does, and the engines carry it.
+**The nacelles are not one lever.** The side pair is 8.9 m ahead of the CG, the aft one 40.5 m
+behind: equal vertical thrust is a two-to-one nose-down moment, and at 90 degrees each the nose
+swings between +4 and -16. The script splits them -- side 0.75 of its 120 degrees, aft 0.36 of
+its 90 -- which over a 70 s climb is +0.5 degrees mean pitch instead of -9.5, and 34 m of climb
+instead of 21.
+
+**Ballonets do not lift it.** Vented at altitude for two minutes they changed the descent rate
+by nothing measurable: their valves flow with a pressure difference the cells do not have. It
+flies heavy and the engines carry it, as the real one does.
 
 ## What is in here
 
-`ZLT-NT.xml` and `Systems/` are the flight model; `Controls.xml` maps the nine channels onto
-it; `Visual.xml` hangs the meshes and names what moves each one -- three fins of the
-inverted-Y tail, the two side pods and the tail spinner, each hinged where the ship hinges it.
-`meshes/` and `textures/` are built from the source hull by `Scripts/zlt_nt/cut_hull.py` and
-`livery.py` in the simulator's own repository, not from this package; re-run them only when the
+`ZLT-NT.xml` and `Systems/` are the flight model, `Controls.xml` maps the nine channels onto
+it, `Visual.xml` hangs the meshes and says what moves each one: the three fins of the
+inverted-Y tail, the two side pods, the tail spinner. `meshes/` and `textures/` are built from
+the source hull by `Scripts/zlt_nt/` in the simulator's repository -- run those only when the
 source model changes.
