@@ -11,17 +11,21 @@
 
   <!-- The tail is an inverted Y: one fin up, two down at 112 degrees, hinged at the
        station where the mesh doubles, 29.9 m aft of the CG. The upper one steers,
-       the lower pair carries the elevator, which is how a Y tail works. -->
-  <surface file="meshes/zlt_nt_rudder_upper.glb" xyz="0 0 0" rpy="0 0 0" source="rudder" axis="0 0 1" hinge="-29.90 0 11.93" limit="25"/>
-  <surface file="meshes/zlt_nt_rudder_port.glb" xyz="0 0 0" rpy="0 0 0" source="elevator" axis="0 -0.927 -0.375" hinge="-29.90 -7.46 0.86" limit="25"/>
-  <surface file="meshes/zlt_nt_rudder_stbd.glb" xyz="0 0 0" rpy="0 0 0" source="elevator" axis="0 0.927 -0.375" hinge="-29.90 7.46 0.86" limit="25"/>
+       the lower pair carries the elevator, which is how a Y tail works. The FCS
+       travel is 20 degrees each way. -->
+  <surface file="meshes/zlt_nt_rudder_upper.glb" xyz="0 0 0" rpy="0 0 0" source="rudder" axis="0 0 1" hinge="-29.90 0 11.93" limit="20"/>
+  <!-- The lower pair share one sign: a rotation is a pseudo-vector, so the starboard axis is the port
+       one negated rather than mirrored -- mirrored, the same elevator sent one trailing edge up and
+       the other down. Both now go down together on a positive elevator, as the FCS means it. -->
+  <surface file="meshes/zlt_nt_rudder_port.glb" xyz="0 0 0" rpy="0 0 0" source="elevator" axis="0 -0.927 -0.375" hinge="-29.90 -7.46 0.86" limit="20"/>
+  <surface file="meshes/zlt_nt_rudder_stbd.glb" xyz="0 0 0" rpy="0 0 0" source="elevator" axis="0 -0.927 0.375" hinge="-29.90 7.46 0.86" limit="20"/>
 
   <!-- Vectored thrust: the housings swivel with the engines they carry, so they are
        hinged where JSBSim swings the thrust and the blades ride on them. The side
        pair reaches 120 degrees, the aft one 90. -->
-  <surface file="meshes/zlt_nt_nacelle_port.glb" xyz="0 0 0" rpy="0 0 0" source="tilt:motor 0" axis="0 -1 0" hinge="8.87 -8.00 0.38" limit="120"/>
-  <surface file="meshes/zlt_nt_nacelle_stbd.glb" xyz="0 0 0" rpy="0 0 0" source="tilt:motor 1" axis="0 -1 0" hinge="8.87 8.00 0.38" limit="120"/>
-  <surface file="meshes/zlt_nt_nacelle_aft.glb" xyz="0 0 0" rpy="0 0 0" source="tilt:motor 2" axis="0 -1 0" hinge="-40.53 0 3.88" limit="90"/>
+  <surface file="meshes/zlt_nt_nacelle_port.glb" xyz="0 0 0" rpy="0 0 0" source="tilt:motor 0" axis="0 1 0" hinge="8.45 -8.53 0.38" limit="120"/>
+  <surface file="meshes/zlt_nt_nacelle_stbd.glb" xyz="0 0 0" rpy="0 0 0" source="tilt:motor 1" axis="0 1 0" hinge="8.45 8.53 0.38" limit="120"/>
+  <surface file="meshes/zlt_nt_nacelle_aft.glb" xyz="0 0 0" rpy="0 0 0" source="tilt:motor 2" axis="0 1 0" hinge="-40.53 0 3.88" limit="90"/>
 
   <propeller file="meshes/left_propeller.glb" xyz="0 0 0" rpy="0 90 0" motor="motor 0" axis="1 0 0"/>
   <propeller file="meshes/right_propeller.glb" xyz="0 0 0" rpy="0 90 0" motor="motor 1" axis="1 0 0"/>

@@ -87,19 +87,26 @@ def write_glb(path, prims, src_json, src_bin, node_name="part", translation=None
 
     painted = {}
 
-    def add_painted(png):
+    def add_painted(png, wrap=10497):
         """One copy of the sheet per file, however many materials wear it."""
-        if png not in painted:
+        if (png, wrap) not in painted:
             out_img.append({"mimeType": "image/png", "bufferView": add_view(open(png, 'rb').read())})
-            out_smp.append({"magFilter": 9729, "minFilter": 9987, "wrapS": 10497, "wrapT": 10497})
+            out_smp.append({"magFilter": 9729, "minFilter": 9987, "wrapS": wrap, "wrapT": wrap})
             out_tex.append({"source": len(out_img) - 1, "sampler": len(out_smp) - 1})
-            painted[png] = len(out_tex) - 1
-        return painted[png]
+            painted[(png, wrap)] = len(out_tex) - 1
+        return painted[(png, wrap)]
 
-    def add_material(m):
-        if m in mat_map:
-            return mat_map[m]
+    def add_material(m, paint_as=None):
+        key = (m, paint_as[0] if paint_as else None)
+        if key in mat_map:
+            return mat_map[key]
         mat = json.loads(json.dumps(src_json['materials'][m]))
+        png = (paint or {}).get(mat.get('name'))
+        if png or paint_as:
+            # Painted over below, so the model's own base colour texture is dropped before the
+            # walk that would embed it: carried across and then replaced, it sat in the file as
+            # an image nothing referenced.
+            mat.get('pbrMetallicRoughness', {}).pop('baseColorTexture', None)
         stack = [mat]
         while stack:                                   # every *Texture holds an index into textures
             node = stack.pop()
@@ -108,27 +115,36 @@ def write_glb(path, prims, src_json, src_bin, node_name="part", translation=None
                     if k.endswith('Texture') and 'index' in v:
                         v['index'] = add_texture(v['index'])
                     stack.append(v)
-        png = (paint or {}).get(mat.get('name'))
         if png:
             # The sheet replaces whatever the model shipped: these materials carried a
             # 169-byte placeholder or nothing at all, and a white hull is not a livery.
             pbr = mat.setdefault('pbrMetallicRoughness', {})
             pbr['baseColorTexture'] = {"index": add_painted(png)}
             pbr.pop('baseColorFactor', None)
+        if paint_as:
+            # The same material under another name, wearing its own sheet: the fin's flat one.
+            mat['name'] = paint_as[0]
+            pbr = mat.setdefault('pbrMetallicRoughness', {})
+            pbr['baseColorTexture'] = {"index": add_painted(paint_as[1], paint_as[2])}
+            pbr.pop('baseColorFactor', None)
         out_mats.append(mat)
-        mat_map[m] = len(out_mats) - 1
-        return mat_map[m]
+        mat_map[key] = len(out_mats) - 1
+        return mat_map[key]
 
     accessors, out_prims = [], []
     for p in prims:
         pos, nrm, uv, tris = p['pos'], p['nrm'], p['uv'], p['tris']
         idx_fmt, idx_ct = ('<H', 5123) if len(pos) < 65536 else ('<I', 5125)
         a0 = len(accessors)
-        for data, n, ty, mn, mx in (
-                (pos, 3, 'VEC3', [min(v[i] for v in pos) for i in range(3)], [max(v[i] for v in pos) for i in range(3)]),
-                (nrm, 3, 'VEC3', None, None),
-                (uv, 2, 'VEC2', None, None)):
+        for data, n, ty, bounded in ((pos, 3, 'VEC3', True), (nrm, 3, 'VEC3', False), (uv, 2, 'VEC2', False)):
             raw = b''.join(struct.pack('<' + 'f' * n, *v) for v in data)
+            mn = mx = None
+            if bounded:
+                # Bounds taken from what was written, not from the doubles: a min a hair below the
+                # float32 the file holds is what a validator flags as an accessor out of its bounds.
+                stored = struct.unpack('<' + 'f' * (n * len(data)), raw)
+                mn = [min(stored[i::n]) for i in range(n)]
+                mx = [max(stored[i::n]) for i in range(n)]
             acc = {"bufferView": add_view(raw, 34962), "componentType": 5126, "count": len(data), "type": ty}
             if mn:
                 acc["min"], acc["max"] = mn, mx
@@ -137,17 +153,18 @@ def write_glb(path, prims, src_json, src_bin, node_name="part", translation=None
         accessors.append({"bufferView": add_view(raw, 34963), "componentType": idx_ct,
                           "count": len(tris) * 3, "type": "SCALAR"})
         out_prims.append({"attributes": {"POSITION": a0, "NORMAL": a0 + 1, "TEXCOORD_0": a0 + 2},
-                          "indices": a0 + 3, "material": add_material(p['material'])})
+                          "indices": a0 + 3, "material": add_material(p['material'], p.get('paint_as'))})
 
     node = {"mesh": 0, "name": node_name}
     if translation:
         node["translation"] = list(translation)
+    used = sorted({ext for mat in out_mats for ext in mat.get('extensions', {})})
     g = {"asset": {"version": "2.0", "generator": "PteroSim ZLT-NT part cutter"},
          "scene": 0, "scenes": [{"nodes": [0]}], "nodes": [node],
          "meshes": [{"name": node_name, "primitives": out_prims}],
          "accessors": accessors, "bufferViews": views,
          "buffers": [{"byteLength": len(bin_)}], "materials": out_mats}
-    for key, val in (("textures", out_tex), ("images", out_img), ("samplers", out_smp)):
+    for key, val in (("textures", out_tex), ("images", out_img), ("samplers", out_smp), ("extensionsUsed", used)):
         if val:
             g[key] = val
     js = _pad(json.dumps(g, separators=(',', ':')).encode('utf-8'), b' ')
@@ -161,6 +178,7 @@ def write_glb(path, prims, src_json, src_bin, node_name="part", translation=None
 SRC = sys.argv[1]
 OUT = sys.argv[2]
 LIVERY = sys.argv[3] if len(sys.argv) > 3 else None    # a PNG for the envelope, laid out by sheet_uv
+FIN_SHEET = sys.argv[4] if len(sys.argv) > 4 else None # a PNG for the upper fin, laid out by fin_uv
 YAX = 3.88
 HINGE_Z = 29.9      # the fin sheet doubles here: forward of it the fixed fin, aft of it the rudder
 FIN_R = 3.4
@@ -179,15 +197,26 @@ def in_fin(lo, hi):
     return f
 
 def side_nacelle(sign):
-    """The swivelling gear housing: outboard of the hull, below its axis, at the engine station."""
+    """The pod that swivels, outboard of its pylon.
+
+    On the ship the whole pod turns on the end of its pylon. The pylon runs from the hull at
+    x = 7.30 out to x = 8.3; the pod is the bulb beyond it, and only the bulb is cut -- cut
+    from x = 7.0 the pylon came with it and swung into the hull.
+    """
     def f(p):
         x, y, z = p
-        return x * sign > 7.0 and y < 2.0 and -9.6 < z < -6.2
+        return x * sign > 8.3 and y < 2.0 and -9.3 < z < -7.15
     return f
 
 def aft_nacelle(p):
+    """The aft shaft and spinner, which turn with the tail engine.
+
+    Not the cone ahead of them: that is the lateral thruster's housing, offset to port at
+    z = 39.0..39.5, and it is fixed -- its own propeller hangs off the hull, so cut with the
+    shaft the housing tilted away from its blade.
+    """
     x, y, z = p
-    return z >= 39.11 and math.hypot(x, y - YAX) < 2.0
+    return z >= 39.9 and math.hypot(x, y - YAX) < 0.5
 
 PARTS = [
     # name, predicate, hinge point in glTF coordinates
@@ -195,8 +224,10 @@ PARTS = [
     ("rudder_port", in_fin(-128, -100), (ARM * math.sin(math.radians(-112)), YAX + ARM * math.cos(math.radians(-112)), HINGE_Z)),
     ("rudder_stbd", in_fin(100, 128), (ARM * math.sin(math.radians(112)), YAX + ARM * math.cos(math.radians(112)), HINGE_Z)),
     # Hinged where JSBSim swings the thrust, so the blade the core hangs off this mesh lands on its shaft.
-    ("nacelle_port", side_nacelle(-1), (-8.0, 0.38, -8.87)),
-    ("nacelle_stbd", side_nacelle(1), (8.0, 0.38, -8.87)),
+    # Hinged a little aft of the bulb's middle: the nose with the propeller swings up, the
+    # tail dips, and neither reaches the pylon.
+    ("nacelle_port", side_nacelle(-1), (-8.53, 0.38, -8.45)),
+    ("nacelle_stbd", side_nacelle(1), (8.53, 0.38, -8.45)),
     ("nacelle_aft", aft_nacelle, (0.0, YAX, 40.53)),
 ]
 
@@ -269,30 +300,83 @@ def compact(src, tris, shift=(0.0, 0.0, 0.0)):
 
 PAINT = {m: LIVERY for m in ENVELOPE_MATERIALS} if LIVERY else None
 
+# Only Envelope.002 is cut: the fins and the housings are its own separate sheets, open at
+# their roots. The body of revolution underneath is Envelope.003, and a radius test alone
+# took its skin out with the rudders -- 22 triangles, and a hole under every one.
+CUT_FROM = 'Envelope.002'
+
 taken = {name: [] for name, _, _ in PARTS}
 hull = []
 for pi, src in enumerate(prims):
     idx = src['idx']
     kept = []
+    cuttable = g['materials'][src['material']]['name'] == CUT_FROM
     for k in range(0, len(idx), 3):
         t = (idx[k], idx[k + 1], idx[k + 2])
         where = None
-        for name, pred, _ in PARTS:
-            if all(pred(src['pos'][i]) for i in t):
-                where = name
-                break
+        if cuttable:
+            for name, pred, _ in PARTS:
+                if all(pred(src['pos'][i]) for i in t):
+                    where = name
+                    break
         (taken[where] if where else kept).append(t)
     if kept:
         hull.append((pi, kept))
+
+FIN_LE, FIN_TE = 21.0, 32.4   # the upper fin's leading edge and the rudder's trailing edge
+CLAMP = 33071                 # glTF CLAMP_TO_EDGE: past the hinge the fin sheet holds its last column, white
+
+
+def fin_chord(r):
+    """The fixed fin's leading edge and hinge at a radius, as fractions of FIN_LE..FIN_TE.
+
+    Both are swept: measured on the mesh, the chord runs u = 0.116..0.552 at r = 5.25 and
+    0.450..0.718 at r = 8.25. Lettering laid out against the sheet's own u met the hinge on
+    one face and the leading edge on the other; laid out against this chord it meets neither.
+    """
+    return 0.116 + 0.111 * (r - 5.25), 0.552 + 0.0553 * (r - 5.25)
+
+
+def upper_fin(p):
+    """The fixed part of the upper fin: the sheet ahead of the rudder hinge."""
+    x, y, z = p
+    return FIN_LE < z < HINGE_Z and math.hypot(x, y - YAX) > FIN_R and -12 < bearing(x, y) < 12
+
+
+def fin_uv(prim, shift=(0.0, 0.0, 0.0)):
+    """A flat sheet for the fin: u across the fixed chord, 0 at the leading edge and 1 at the
+    hinge whatever the height, v down from the tip. The port face has u reversed, so one sheet
+    reads true from both sides. The rudder continues past u = 1 into the clamped edge: white.
+    """
+    uv = []
+    for x, y, z in prim['pos']:
+        r = math.hypot(x, y + shift[1] - YAX)
+        le, te = fin_chord(r)
+        u = ((z + shift[2] - FIN_LE) / (FIN_TE - FIN_LE) - le) / (te - le)
+        uv.append((1.0 - u if x < 0 else u, 1.0 - (r - 4.0) / (9.1 - 4.0)))
+    return dict(prim, uv=uv, paint_as=('Fin', FIN_SHEET, CLAMP))
+
 
 os.makedirs(OUT, exist_ok=True)
 for name, _, hinge in PARTS:
     tris = taken[name]
     src = prims[12]
-    size = write_glb(os.path.join(OUT, "zlt_nt_%s.glb" % name), [compact(src, tris, hinge)], g, b, name, paint=PAINT)
+    part = compact(src, tris, hinge)
+    if name == "rudder_upper" and FIN_SHEET:
+        part = fin_uv(part, hinge)     # the rudder continues the fin's sheet, so lettering crosses the hinge
+    size = write_glb(os.path.join(OUT, "zlt_nt_%s.glb" % name), [part], g, b, name, paint=PAINT)
     print("%-14s %5d tris  hinge gltf=(%.2f %.2f %.2f)  ue=(%.2f %.2f %.2f)  %d bytes"
           % (name, len(tris), hinge[0], hinge[1], hinge[2], -hinge[2], hinge[0], hinge[1], size))
 
-body = [compact(prims[pi], tris) for pi, tris in hull]
+body = []
+for pi, tris in hull:
+    src = prims[pi]
+    if FIN_SHEET and g['materials'][src['material']]['name'] == CUT_FROM:
+        fin = {t for t in tris if all(upper_fin(src['pos'][i]) for i in t)}
+        body.append(compact(src, [t for t in tris if t not in fin]))
+        body.append(fin_uv(compact(src, sorted(fin))))
+        print("upper fin      %5d tris  on its own sheet" % len(fin))
+    else:
+        body.append(compact(src, tris))
 size = write_glb(os.path.join(OUT, "zlt_nt_airframe.glb"), body, g, b, "body", paint=PAINT)
 print("hull           %5d tris  %d bytes" % (sum(len(t['tris']) for t in body), size))
