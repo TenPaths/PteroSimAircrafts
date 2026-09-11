@@ -26,8 +26,8 @@
   <!-- Vectored thrust: the housings swivel with the engines they carry, so they are
        hinged where JSBSim swings the thrust and the blades ride on them. The side
        pair reaches 120 degrees, the aft one 90. -->
-  <surface file="meshes/zlt_nt_nacelle_port.glb" xyz="0 0 0" rpy="0 0 0" source="tilt:motor 0" axis="0 1 0" hinge="8.22 -8.53 0.385" limit="120"/>
-  <surface file="meshes/zlt_nt_nacelle_stbd.glb" xyz="0 0 0" rpy="0 0 0" source="tilt:motor 1" axis="0 1 0" hinge="8.22 8.53 0.385" limit="120"/>
+  <surface file="meshes/zlt_nt_nacelle_port.glb" xyz="0 0 0" rpy="0 0 0" source="tilt:motor 0" axis="0 1 0" hinge="7.86 -8.53 0.384" limit="120"/>
+  <surface file="meshes/zlt_nt_nacelle_stbd.glb" xyz="0 0 0" rpy="0 0 0" source="tilt:motor 1" axis="0 1 0" hinge="7.86 8.53 0.384" limit="120"/>
   <!-- The tail cone is fixed, as the ship's is; only the spinner the propeller sits on swivels,
        about its own base 40.53 m aft of the CG -- which is where the propeller sits too. -->
   <surface file="meshes/zlt_nt_nacelle_aft.glb" xyz="0 0 0" rpy="0 0 0" source="tilt:motor 2" axis="0 1 0" hinge="-40.53 0 3.88" limit="90"/>

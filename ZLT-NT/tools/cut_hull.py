@@ -241,11 +241,12 @@ PARTS = [
     ("rudder_port", in_fin(-128, -100), (ARM * math.sin(math.radians(-115)), YAX + ARM * math.cos(math.radians(-115)), HINGE_Z)),
     ("rudder_stbd", in_fin(100, 128), (ARM * math.sin(math.radians(115)), YAX + ARM * math.cos(math.radians(115)), HINGE_Z)),
     # Hinged where JSBSim swings the thrust, so the blade the core hangs off this mesh lands on its shaft.
-    # Hinged on the pylon's axis: where the pylon enters the bulb, |x| = 8.3, its section is
-    # an ellipse 0.15 by 1.14 m centred at y 0.385, z -8.22, and the bulb turns about that
-    # line. Hinged 0.45 m ahead of it the joint swung away and the pylon stood in the air.
-    ("nacelle_port", side_nacelle(-1), (-8.53, 0.385, -8.22)),
-    ("nacelle_stbd", side_nacelle(1), (8.53, 0.385, -8.22)),
+    # Hinged on the pylon tube's axis. The tube runs out from the hull and into the pod as far
+    # as its middle, |x| = 8.53, and its ring there is centred at y 0.384, z -7.86 -- not at
+    # the pod's own centre, z -8.22, which is 0.36 m further aft. Hinged on the pod's centre,
+    # the pod swung off the tube by that much, which is what showed.
+    ("nacelle_port", side_nacelle(-1), (-8.53, 0.384, -7.86)),
+    ("nacelle_stbd", side_nacelle(1), (8.53, 0.384, -7.86)),
     # Hinged at the cone's base on the cap, so the cone pivots where it stands and the shaft
     # and propeller swing with it -- the real ship's tail propeller swings down for lift.
     ("nacelle_aft", aft_nacelle, (0.0, YAX, 40.53)),
