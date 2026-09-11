@@ -22,15 +22,17 @@ that is where the keyboard focus lives.
 
 ![gamepad layout](gamepad.svg)
 
+*The diagram is 8BitDo's, the one the JSBSim reference app's README uses.*
+
 | command | key | gamepad |
 | --- | --- | --- |
 | Throttle, all three engines | `W` / `S` | left stick Y |
 | Throttle - cut | `Space` | |
 | Yaw: rudders and lateral thruster | `A` / `D` | left stick X |
 | Elevator: nose up / down | `Up` / `Down` | right stick Y |
-| Nacelles up / down | `Q` / `E` | LT or RT |
+| Nacelles up / down | `Q` / `E` | ZL or ZR |
 | Ballonets - vent / fill | `Z` / `X` | buttons 1 / 2 |
-| Stop | `Esc` | Options |
+| Stop | `Esc` | + button |
 
 Throttle and nacelles are levers and hold where you leave them; yaw and elevator spring back.
 Manual mode reads either the keyboard or the first connected gamepad, selected with `--input`.
