@@ -307,7 +307,9 @@ def compact(src, tris, shift=(0.0, 0.0, 0.0)):
         out.append(tuple(nt))
     return {'pos': pos, 'nrm': nrm, 'uv': uv, 'tris': out, 'material': src['material']}
 
-PAINT = {m: LIVERY for m in ENVELOPE_MATERIALS} if LIVERY else None
+# 'Envelope' is not the envelope: it is the car's shell, x within 1.05 m of the centreline and
+# hanging 2.8..5.2 m below the axis. Left off the sheet, it stays white, as the ship's car is.
+PAINT = {m: LIVERY for m in ENVELOPE_MATERIALS if m != 'Envelope'} if LIVERY else None
 
 # Only Envelope.002 is cut: the fins and the housings are its own separate sheets, open at
 # their roots. The body of revolution underneath is Envelope.003, and a radius test alone
@@ -385,6 +387,12 @@ def pylon(p):
     return abs(x) > 7.0 and y < 2.0 and -9.6 < z < -6.2
 
 
+def car(p):
+    """The part of the car's shell that Envelope.002 carries: white, not the belly of the sheet."""
+    x, y, z = p
+    return abs(x) < 1.25 and y < -2.7 and -17.5 < z < -6.0
+
+
 os.makedirs(OUT, exist_ok=True)
 for name, _, hinge in PARTS:
     tris = taken[name]
@@ -403,11 +411,11 @@ for pi, tris in hull:
     src = prims[pi]
     if FIN_SHEETS and g['materials'][src['material']]['name'] == CUT_FROM:
         fin = {t for t in tris if all(upper_fin(src['pos'][i]) for i in t)}
-        pyl = {t for t in tris if t not in fin and all(pylon(src['pos'][i]) for i in t)}
-        body.append(compact(src, [t for t in tris if t not in fin and t not in pyl]))
+        plain = {t for t in tris if t not in fin and all(pylon(src['pos'][i]) or car(src['pos'][i]) for i in t)}
+        body.append(compact(src, [t for t in tris if t not in fin and t not in plain]))
         body.extend(fin_uv(compact(src, sorted(fin))))
-        body.append(dict(compact(src, sorted(pyl)), paint_as=POD))
-        print("upper fin      %5d tris  on its own sheets;  pylons %d tris plain" % (len(fin), len(pyl)))
+        body.append(dict(compact(src, sorted(plain)), paint_as=POD))
+        print("upper fin      %5d tris  on its own sheets;  pylons and car %d tris plain" % (len(fin), len(plain)))
     else:
         body.append(compact(src, tris))
 size = write_glb(os.path.join(OUT, "zlt_nt_airframe.glb"), body, g, b, "body", paint=PAINT)
