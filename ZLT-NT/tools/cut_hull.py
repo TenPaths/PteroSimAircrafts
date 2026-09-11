@@ -338,10 +338,18 @@ FIN_LE, FIN_TE = 21.0, 32.4   # the upper fin's leading edge and the rudder's tr
 CLAMP = 33071                 # glTF CLAMP_TO_EDGE: past the hinge the fin sheet holds its last column, white
 
 
+FIN_COVE = 30.45   # the hinge fairing's aft row is at z = 30.36 at every height: the visible end of the fixed fin
+
+
 def upper_fin(p):
-    """The fixed part of the upper fin: the sheet ahead of the rudder hinge."""
+    """The fixed part of the upper fin, fairing included.
+
+    The rudder's nose sits inside a fairing the fin carries, whose aft row is at z = 30.36.
+    Cut at the rudder's own station the fairing stayed on the hull, and the fin's sheet
+    ended a metre ahead of the seam a viewer sees.
+    """
     x, y, z = p
-    return FIN_LE < z < HINGE_Z and math.hypot(x, y - YAX) > FIN_R and -12 < bearing(x, y) < 12
+    return FIN_LE < z < FIN_COVE and math.hypot(x, y - YAX) > FIN_R and -12 < bearing(x, y) < 12
 
 
 def fin_uv(prim, shift=(0.0, 0.0, 0.0)):

@@ -167,12 +167,12 @@ if len(sys.argv) > 3:
     for path, mirror in ((sys.argv[2], True), (sys.argv[3], False)):
         fin = Image.new("RGB", (FW, FH), WHITE)
         layer = Image.new("RGBA", (FW, FH), (0, 0, 0, 0))
-        # High on the fin, as on the ship, each row ending just ahead of the hinge at its own
-        # height -- the hinge is swept, so a lower row must end further forward than the row
-        # above it, or its last letters fall into the gap between fin and rudder.
-        stamp(layer, 0.695, 7.85, "ZEPPELIN", NARROW_BOLD, 0.48, mirror)
-        stamp(layer, 0.655, 7.30, "Neue Technologie", NARROW, 0.17, mirror)
-        stamp(layer, 0.710, 8.35, "D-LZNT", NARROW, 0.26, mirror)
+        # High on the fin, as on the ship, every row ending at the seam a viewer sees: the aft
+        # row of the hinge fairing, z = 30.36 at every height, u = 0.82 -- so the rows end in
+        # one straight line, as they do on the ship.
+        stamp(layer, 0.810, 7.85, "ZEPPELIN", NARROW_BOLD, 0.48, mirror)
+        stamp(layer, 0.810, 7.30, "Neue Technologie", NARROW, 0.17, mirror)
+        stamp(layer, 0.810, 8.35, "D-LZNT", NARROW, 0.26, mirror)
         # The flag, on the rudder. Not right behind the hinge: at this height the fixed fin's
         # trailing edge is swept forward of the rudder's cut, and a flag at u = 0.73 fell into
         # that gap and showed as a black sliver. A flag reads the same either way round.
@@ -181,7 +181,7 @@ if len(sys.argv) > 3:
         third = tile.height / 3.0
         for i, band in enumerate(((0, 0, 0), (221, 0, 0), (255, 206, 0))):
             t.rectangle([0, int(i * third), tile.width, int((i + 1) * third)], fill=band + (255,))
-        layer.alpha_composite(tile, (fin_x(0.805), fin_y(8.35) - tile.height // 2))
+        layer.alpha_composite(tile, (fin_x(0.845), fin_y(8.35) - tile.height // 2))   # clear of the fairing lip
         fin.paste(layer, (0, 0), layer)
         fin.save(path)
         print("wrote", path, fin.size)
