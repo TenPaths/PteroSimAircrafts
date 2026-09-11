@@ -11,23 +11,50 @@ which no autopilot output maps to. `fly_airship.py` drives the nine channels dir
 
 ```
 python fly_airship.py --auto --spawn      # climb to 40 m, hold, descend and land, unattended
-python fly_airship.py                     # a gamepad flies it
+python fly_airship.py                     # you fly it: keyboard, gamepad, or both
 ```
 
 Spawn the airship in the editor first, or pass `--spawn` to have the script do it. `--cruise`
 and `--hold` set the height in metres and how long to hold there. The script needs the
-`pterosim` SDK on the path, and `pygame` as well if you fly with a gamepad.
+`pterosim` SDK on the path, and `pygame` for flying it yourself.
 
-With a gamepad:
+Without `--auto` a small window opens: click it, because that is where the keyboard focus
+lives, and it shows the levers and the ship's state while you fly. A gamepad, if one is
+plugged in, works at the same time -- each channel takes whichever of the two is moving.
+
+The throttle and the nacelles are levers: they stay where you leave them. The rudder and the
+elevator spring back to centre, as a stick does.
+
+### Keyboard
+
+| key | does |
+| --- | --- |
+| `W` / `S` | throttle up / down, all three engines |
+| `Space` | throttle to zero |
+| `A` / `D` | yaw left / right: rudders and the lateral thruster |
+| `Up` / `Down` | elevator: nose up / down |
+| `Q` / `E` | nacelles up / down -- `Q` to the balanced lift setting, `E` back to level |
+| `Z` / `X` | ballonets: vent / fill |
+| `Esc` | stop |
+
+### Gamepad
 
 | control | does |
 | --- | --- |
-| left stick, up/down | throttle, all three engines |
-| left stick, left/right | yaw: rudders and the lateral thruster |
+| left stick, up/down | throttle |
+| left stick, left/right | yaw |
 | right stick, up/down | elevator |
-| triggers | nacelles: 0 is level flight, 1 is straight up and balanced |
+| triggers | nacelles: released is level flight, pulled is straight up and balanced |
 | buttons 0 / 1 | vent / fill the ballonets |
-| button 7 or Ctrl-C | stop |
+| button 7 | stop |
+
+### Taking off by hand
+
+Open the throttle with `W` and let the engines spool for three or four seconds, then hold `Q`
+until the nacelles read 1.00 -- the swivel actuator takes about four seconds for full travel.
+The ship climbs at 0.7 m/s with the nose within a degree of level. To come down, `E` back to
+level flight and ease the throttle off; to land, cut it with `Space` and let it settle on its
+wheels, which it does at four degrees nose-up.
 
 ## Two things worth knowing before you fly
 

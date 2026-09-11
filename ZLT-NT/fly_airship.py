@@ -1,8 +1,12 @@
 """Fly the ZLT-NT airship by hand. This package ships no autopilot airframe, and
 that is the point.
 
-  python fly_airship.py            # a gamepad flies it
+  python fly_airship.py            # you fly it, from the keyboard or a gamepad
   python fly_airship.py --auto     # climb, hold, descend and land, unattended
+
+Keyboard: W/S throttle, Space cuts it, A/D yaw, Up/Down elevator, Q/E nacelles up/down,
+Z/X vent/fill the ballonets, Esc stops. A gamepad, if one is plugged in, works at the same
+time: left stick throttle and yaw, right stick elevator, triggers the nacelles.
 
 PX4's airship module offers a forward thrust and two moments and nothing else: no
 vectored thrust, no elevator, no ballonets -- so under it the ship can only drive
@@ -159,62 +163,124 @@ def fly_auto(sim, ship, cruise, hold_for):
     ship.rest()
 
 
-def fly_stick(sim, ship):
+KEYS = [
+    ("W / S", "throttle up / down, all three engines"),
+    ("Space", "throttle to zero"),
+    ("A / D", "yaw left / right: rudders and the lateral thruster"),
+    ("Up / Down", "elevator: nose up / down"),
+    ("Q / E", "nacelles up / down -- Q to the balanced lift setting, E back to level"),
+    ("Z / X", "ballonets: vent / fill (they trim the ship, they do not lift it)"),
+    ("Esc", "stop"),
+]
+
+PAD = [
+    ("left stick up/down", "throttle"),
+    ("left stick left/right", "yaw"),
+    ("right stick up/down", "elevator"),
+    ("triggers", "nacelles: 0 is level flight, 1 is straight up and balanced"),
+    ("button 0 / 1", "vent / fill the ballonets"),
+    ("button 7", "stop"),
+]
+
+
+def fly_manual(sim, ship):
+    """Keyboard, gamepad, or both at once -- whichever moves wins each channel.
+
+    A window is opened because that is where the keyboard focus lives; it also shows the
+    keys and what the levers are doing, which beats reading them off the terminal while
+    flying. The throttle and the nacelles are levers, held where they are left; the rudder
+    and the elevator spring back, as a stick does.
+    """
     import pygame
 
     pygame.init()
     pygame.joystick.init()
-    if pygame.joystick.get_count() == 0:
-        sys.exit("No gamepad. Plug one in, or run with --auto.")
-    js = pygame.joystick.Joystick(0)
-    js.init()
-    print("stick: %s, %d axes, %d buttons" % (js.get_name(), js.get_numaxes(), js.get_numbuttons()))
-    print("""
-  left stick  up/down    throttle, all three engines
-  left stick  left/right yaw: rudders and the lateral thruster
-  right stick up/down    elevator
-  triggers               nacelles up: 0 is level flight, 1 is straight up and balanced
-  button 0 / 1           vent / fill the ballonets (they trim the ship, they do not lift it)
-  button 7 / Ctrl-C      stop
-""")
+    js = None
+    if pygame.joystick.get_count():
+        js = pygame.joystick.Joystick(0)
+        js.init()
+        print("stick: %s, %d axes, %d buttons" % (js.get_name(), js.get_numaxes(), js.get_numbuttons()))
+    print()
+    print("keyboard (click the window first):")
+    for key, what in KEYS:
+        print("    %-10s %s" % (key, what))
+    if js:
+        print()
+        print("gamepad:")
+        for key, what in PAD:
+            print("    %-22s %s" % (key, what))
+    print()
+
+    screen = pygame.display.set_mode((620, 300))
+    pygame.display.set_caption("ZLT-NT -- click here, then fly")
+    font = pygame.font.SysFont("consolas", 15)
+    big = pygame.font.SysFont("consolas", 17, bold=True)
 
     def axis(i, dead=0.06):
-        if i >= js.get_numaxes():
+        if not js or i >= js.get_numaxes():
             return 0.0
         v = js.get_axis(i)
         return 0.0 if abs(v) < dead else v
 
-    t0, next_print, lift = time.time(), 0.0, 0.0
+    def held(keys, *names):
+        return any(keys[getattr(pygame, "K_" + n)] for n in names)
+
+    def triggers():
+        return max((axis(4) + 1.0) * 0.5, (axis(5) + 1.0) * 0.5) if js and js.get_numaxes() > 5 else 0.0
+
+    # Where the triggers rest, read once: a DualSense parks axes 4 and 5 at +1, and taken as a
+    # lever position that put the nacelles straight up before anyone had touched anything.
+    trig_rest = triggers()
+    t0, next_print, throttle, lift = time.time(), 0.0, 0.0, 0.0
     while True:
         for ev in pygame.event.get():
             if ev.type == pygame.QUIT:
                 return
-        if js.get_numbuttons() > 7 and js.get_button(7):
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_ESCAPE] or (js and js.get_numbuttons() > 7 and js.get_button(7)):
             return
 
-        # Triggers rest at -1 on most pads, so the pair reads as one 0..1 lever.
-        trig = max((axis(4) + 1.0) * 0.5, (axis(5) + 1.0) * 0.5) if js.get_numaxes() > 5 else 0.0
-        lift = trig if trig > 0.0 else lift
+        step = 1.0 / RATE_HZ
+        throttle += (held(keys, "w") - held(keys, "s")) * 0.5 * step
+        lift += (held(keys, "q") - held(keys, "e")) * 0.4 * step
+        if keys[pygame.K_SPACE]:
+            throttle = 0.0
+        # The pad wins a channel it is actually moving, so both can be held at once.
+        trig = triggers()
+        if abs(trig - trig_rest) > 0.05:
+            lift = trig
+        if abs(axis(1)) > 0.0:
+            throttle = (-axis(1) + 1.0) * 0.5
+        throttle, lift = clamp(throttle, 0.0, 1.0), clamp(lift, 0.0, 1.0)
 
-        ballonet = 0.0
-        if js.get_numbuttons() > 1:
-            ballonet = -1.0 if js.get_button(0) else 1.0 if js.get_button(1) else 0.0
+        yaw = clamp(held(keys, "d", "RIGHT") - held(keys, "a", "LEFT") + axis(0))
+        elevator = clamp(held(keys, "DOWN") - held(keys, "UP") + axis(3))
+        ballonet = clamp(held(keys, "x") - held(keys, "z")
+                         + (js and js.get_numbuttons() > 1 and (js.get_button(1) - js.get_button(0)) or 0))
 
-        ship.set(throttle=(-axis(1) + 1.0) * 0.5, yaw=axis(0), elevator=axis(3),
-                 lift=lift, ballonet=ballonet)
+        ship.set(throttle=throttle, yaw=yaw, elevator=elevator, lift=lift, ballonet=ballonet)
         ship.push()
 
+        a = list(sim.aircraft_status())[0]
+        screen.fill((22, 26, 32))
+        screen.blit(big.render("throttle %.2f   nacelles %.2f   yaw %+.1f   elevator %+.1f"
+                               % (throttle, lift, yaw, elevator), True, (235, 235, 230)), (14, 12))
+        screen.blit(big.render("alt %6.1f m   pitch %+6.1f   heading %5.1f"
+                               % (a.z / 100.0, a.pitch, a.yaw), True, (150, 200, 255)), (14, 36))
+        for i, (key, what) in enumerate(KEYS):
+            screen.blit(font.render("%-10s %s" % (key, what), True, (170, 175, 180)), (14, 78 + i * 22))
+        pygame.display.flip()
+
         if time.time() > next_print:
-            a = list(sim.aircraft_status())[0]
             print("  t+%5.1fs  alt=%7.2f m  pitch=%6.2f  yaw=%6.1f  thr=%.2f lift=%.2f"
-                  % (time.time() - t0, a.z / 100.0, a.pitch, a.yaw, ship.c[DRIVE_AFT], lift))
+                  % (time.time() - t0, a.z / 100.0, a.pitch, a.yaw, throttle, lift))
             next_print = time.time() + 1.0
-        time.sleep(1.0 / RATE_HZ)
+        time.sleep(step)
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--auto", action="store_true", help="fly a climb-hold-land profile instead of a gamepad")
+    ap.add_argument("--auto", action="store_true", help="fly a climb-hold-land profile instead of flying it yourself")
     ap.add_argument("--spawn", action="store_true", help="spawn the airship if the scene has none")
     ap.add_argument("--cruise", type=float, default=40.0, help="height above the spawn point, metres")
     ap.add_argument("--hold", type=float, default=60.0, help="seconds to hold up there")
@@ -227,13 +293,13 @@ def main():
     sim.start()
     time.sleep(0.5)
     ship.rest()
-    print("simulation running, %s at the controls\n" % ("the script" if args.auto else "the stick"))
+    print("simulation running, %s at the controls\n" % ("the script" if args.auto else "you"))
 
     try:
         if args.auto:
             fly_auto(sim, ship, args.cruise, args.hold)
         else:
-            fly_stick(sim, ship)
+            fly_manual(sim, ship)
     except KeyboardInterrupt:
         print("\nstopped")
     finally:
