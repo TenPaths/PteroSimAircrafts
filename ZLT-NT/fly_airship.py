@@ -1,6 +1,7 @@
 """Fly the ZLT-NT airship by hand, or let it fly a profile on its own.
 
-  python fly_airship.py                 # keyboard, gamepad, or both
+  python fly_airship.py --input keyboard
+  python fly_airship.py --input gamepad
   python fly_airship.py --auto          # climbs, holds, descends and lands
 
 Spawn the airship in the editor first; this script only flies what is already there.
@@ -167,24 +168,24 @@ PAD = [
 ]
 
 
-def fly_manual(sim, ship):
-    """Keyboard, gamepad, or both at once -- whichever moves wins each channel.
-
-    The window is where the keyboard focus lives; it also shows the levers and the ship.
-    """
+def fly_manual(sim, ship, input_mode):
+    """Drive the already-running simulation from one selected input device."""
     import pygame
 
     pygame.init()
     pygame.joystick.init()
     js = None
-    if pygame.joystick.get_count():
+    if input_mode == "gamepad":
+        if not pygame.joystick.get_count():
+            sys.exit("No gamepad found. Connect one or use --input keyboard.")
         js = pygame.joystick.Joystick(0)
         js.init()
         print("stick: %s, %d axes, %d buttons" % (js.get_name(), js.get_numaxes(), js.get_numbuttons()))
     print()
-    print("keyboard (click the window first):")
-    for key, what in KEYS:
-        print("    %-10s %s" % (key, what))
+    if input_mode == "keyboard":
+        print("keyboard (click the window first):")
+        for key, what in KEYS:
+            print("    %-10s %s" % (key, what))
     if js:
         print()
         print("gamepad:")
@@ -192,8 +193,10 @@ def fly_manual(sim, ship):
             print("    %-22s %s" % (key, what))
     print()
 
-    screen = pygame.display.set_mode((620, 300))
-    pygame.display.set_caption("ZLT-NT -- click here, then fly")
+    screen = None
+    if input_mode == "keyboard":
+        screen = pygame.display.set_mode((620, 300))
+        pygame.display.set_caption("ZLT-NT -- click here, then fly")
     font = pygame.font.SysFont("consolas", 15)
     big = pygame.font.SysFont("consolas", 17, bold=True)
 
@@ -215,42 +218,48 @@ def fly_manual(sim, ship):
     t0, next_print, throttle, lift = time.time(), 0.0, 0.0, 0.0
     while True:
         for ev in pygame.event.get():
-            if ev.type == pygame.QUIT:
+            if ev.type == pygame.QUIT and screen:
                 return
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_ESCAPE] or (js and js.get_numbuttons() > 7 and js.get_button(7)):
+        if (input_mode == "keyboard" and keys[pygame.K_ESCAPE]) or (js and js.get_numbuttons() > 7 and js.get_button(7)):
             return
 
         step = 1.0 / RATE_HZ
-        throttle += (held(keys, "w") - held(keys, "s")) * 0.5 * step
-        lift += (held(keys, "q") - held(keys, "e")) * 0.4 * step
-        if keys[pygame.K_SPACE]:
-            throttle = 0.0
-        # The pad wins a channel it is actually moving, so both can be held at once.
-        trig = triggers()
-        if abs(trig - trig_rest) > 0.05:
-            lift = trig
-        if abs(axis(1)) > 0.0:
-            throttle = (-axis(1) + 1.0) * 0.5
+        if input_mode == "keyboard":
+            throttle += (held(keys, "w") - held(keys, "s")) * 0.5 * step
+            lift += (held(keys, "q") - held(keys, "e")) * 0.4 * step
+            if keys[pygame.K_SPACE]:
+                throttle = 0.0
+        else:
+            trig = triggers()
+            if abs(trig - trig_rest) > 0.05:
+                lift = trig
+            if abs(axis(1)) > 0.0:
+                throttle = (-axis(1) + 1.0) * 0.5
         throttle, lift = clamp(throttle, 0.0, 1.0), clamp(lift, 0.0, 1.0)
 
-        yaw = clamp(held(keys, "d", "RIGHT") - held(keys, "a", "LEFT") + axis(0))
-        elevator = clamp(held(keys, "DOWN") - held(keys, "UP") + axis(3))
-        ballonet = clamp(held(keys, "x") - held(keys, "z")
-                         + (js and js.get_numbuttons() > 1 and (js.get_button(1) - js.get_button(0)) or 0))
+        if input_mode == "keyboard":
+            yaw = clamp(held(keys, "d", "RIGHT") - held(keys, "a", "LEFT"))
+            elevator = clamp(held(keys, "DOWN") - held(keys, "UP"))
+            ballonet = clamp(held(keys, "x") - held(keys, "z"))
+        else:
+            yaw = axis(0)
+            elevator = axis(3)
+            ballonet = clamp(js.get_numbuttons() > 1 and (js.get_button(1) - js.get_button(0)) or 0)
 
         ship.set(throttle=throttle, yaw=yaw, elevator=elevator, lift=lift, ballonet=ballonet)
         ship.push()
 
         a = list(sim.aircraft_status())[0]
-        screen.fill((22, 26, 32))
-        screen.blit(big.render("throttle %.2f   nacelles %.2f   yaw %+.1f   elevator %+.1f"
-                               % (throttle, lift, yaw, elevator), True, (235, 235, 230)), (14, 12))
-        screen.blit(big.render("alt %6.1f m   pitch %+6.1f   heading %5.1f"
-                               % (a.z / 100.0, a.pitch, a.yaw), True, (150, 200, 255)), (14, 36))
-        for i, (key, what) in enumerate(KEYS):
-            screen.blit(font.render("%-10s %s" % (key, what), True, (170, 175, 180)), (14, 78 + i * 22))
-        pygame.display.flip()
+        if screen:
+            screen.fill((22, 26, 32))
+            screen.blit(big.render("throttle %.2f   nacelles %.2f   yaw %+.1f   elevator %+.1f"
+                                   % (throttle, lift, yaw, elevator), True, (235, 235, 230)), (14, 12))
+            screen.blit(big.render("alt %6.1f m   pitch %+6.1f   heading %5.1f"
+                                   % (a.z / 100.0, a.pitch, a.yaw), True, (150, 200, 255)), (14, 36))
+            for i, (key, what) in enumerate(KEYS):
+                screen.blit(font.render("%-10s %s" % (key, what), True, (170, 175, 180)), (14, 78 + i * 22))
+            pygame.display.flip()
 
         if time.time() > next_print:
             print("  t+%5.1fs  alt=%7.2f m  pitch=%6.2f  yaw=%6.1f  thr=%.2f lift=%.2f"
@@ -262,24 +271,22 @@ def fly_manual(sim, ship):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--auto", action="store_true", help="fly a climb-hold-land profile instead of flying it yourself")
+    ap.add_argument("--input", choices=("keyboard", "gamepad"), default="keyboard",
+                    help="manual mode input device (default: keyboard)")
     ap.add_argument("--cruise", type=float, default=40.0, help="height above the spawn point, metres")
     ap.add_argument("--hold", type=float, default=60.0, help="seconds to hold up there")
     args = ap.parse_args()
 
     sim, aircraft = connect()
     ship = Airship(aircraft)
-    # Started before a single channel is sent: the engines are sized and the command
-    # buffer created by the start, and controls arriving before it have nowhere to go.
-    sim.start()
-    time.sleep(0.5)
     ship.rest()
-    print("simulation running, %s at the controls\n" % ("the script" if args.auto else "you"))
+    print("connected to the running simulation, %s at the controls\n" % ("the script" if args.auto else args.input))
 
     try:
         if args.auto:
             fly_auto(sim, ship, args.cruise, args.hold)
         else:
-            fly_manual(sim, ship)
+            fly_manual(sim, ship, args.input)
     except KeyboardInterrupt:
         print("\nstopped")
     finally:

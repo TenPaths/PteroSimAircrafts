@@ -6,13 +6,14 @@ and NOTICE); visuals, livery and the flying script are this package's.
 ## Run it
 
 ```
-python fly_airship.py                 # you fly it: keyboard, gamepad, or both
+python fly_airship.py --input keyboard
+python fly_airship.py --input gamepad
 python fly_airship.py --auto          # climbs, holds, descends and lands on its own
 ```
 
-Spawn the airship in the editor first; the script flies what is already there. `--cruise` and
-`--hold` are the `--auto` profile's height in metres (default 40) and how long to stay there
-(default 60).
+Spawn the airship in the editor and start the simulation first; the script only controls the
+existing ZLT-NT. `--input` selects one manual input device. `--cruise` and `--hold` are the
+`--auto` profile's height in metres (default 40) and how long to stay there (default 60).
 
 Needs the `pterosim` SDK, and `pygame` to fly it yourself. A small window opens -- click it,
 that is where the keyboard focus lives.
@@ -32,7 +33,7 @@ that is where the keyboard focus lives.
 | Stop | `Esc` | button 7 |
 
 Throttle and nacelles are levers and hold where you leave them; yaw and elevator spring back.
-Both inputs work at once -- each channel follows whichever is moving.
+Manual mode reads either the keyboard or the first connected gamepad, selected with `--input`.
 
 To take off: throttle up, let the engines spool three or four seconds, then hold `Q` to 1.00 --
 the swivel takes about four seconds. It climbs at 0.7 m/s with the nose within a degree of
