@@ -28,9 +28,9 @@ that is where the keyboard focus lives.
 | Throttle - cut | `Space` | |
 | Yaw: rudders and lateral thruster | `A` / `D` | left stick X |
 | Elevator: nose up / down | `Up` / `Down` | right stick Y |
-| Nacelles up / down | `Q` / `E` | triggers |
-| Ballonets - vent / fill | `Z` / `X` | buttons 0 / 1 |
-| Stop | `Esc` | button 7 |
+| Nacelles up / down | `Q` / `E` | LT or RT |
+| Ballonets - vent / fill | `Z` / `X` | buttons 1 / 2 |
+| Stop | `Esc` | Options |
 
 Throttle and nacelles are levers and hold where you leave them; yaw and elevator spring back.
 Manual mode reads either the keyboard or the first connected gamepad, selected with `--input`.
