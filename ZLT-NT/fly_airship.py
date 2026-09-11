@@ -11,9 +11,9 @@ Spawn the airship in the editor first; this script only flies what is already th
   throttle - cut                       Space
   yaw: rudders and lateral thruster    A / D         left stick X
   elevator: nose up / down             Up / Down     right stick Y
-  nacelles up / down                   Q / E         triggers
+  nacelles up / down                   Q / E         LT or RT
   ballonets - vent / fill              Z / X         buttons 1 / 2
-  stop                                 Esc           + button
+  stop                                 Esc           Start
 
 Throttle and nacelles are levers and hold where they are left; yaw and elevator spring
 back. See README.md for what the ship does with all this.
@@ -29,9 +29,9 @@ GRPC = "localhost:10010"
 AIRCRAFT = "ZLT-NT"
 RATE_HZ = 50.0
 
-# Numbered as on the README diagram: 1 top, 2 right, 3 bottom, 4 left; + is Options. On a DualSense
-# under SDL2 those are 3 triangle, 1 circle, 0 cross, 2 square, and 6.
-BTN_1, BTN_2, BTN_PLUS = 3, 1, 6
+# Numbered as on the README diagram: 1 top, 2 right, 3 bottom, 4 left; Start is Options. On a
+# DualSense under SDL2 those are 3 triangle, 1 circle, 0 cross, 2 square, and 6.
+BTN_1, BTN_2, BTN_START = 3, 1, 6
 
 # Controls.xml, in order.
 DRIVE_STBD, DRIVE_PORT, DRIVE_AFT = 0, 1, 2
@@ -166,9 +166,9 @@ PAD = [
     ("left stick up/down", "throttle"),
     ("left stick left/right", "yaw"),
     ("right stick up/down", "elevator"),
-    ("triggers", "nacelles: 0 is level flight, 1 is straight up and balanced"),
+    ("LT or RT", "nacelles: 0 is level flight, 1 is straight up and balanced"),
     ("buttons 1 / 2", "vent / fill the ballonets"),
-    ("+ button", "stop"),
+    ("Start", "stop"),
 ]
 
 
@@ -225,7 +225,7 @@ def fly_manual(sim, ship, input_mode):
             if ev.type == pygame.QUIT and screen:
                 return
         keys = pygame.key.get_pressed()
-        if (input_mode == "keyboard" and keys[pygame.K_ESCAPE]) or (js and js.get_numbuttons() > BTN_PLUS and js.get_button(BTN_PLUS)):
+        if (input_mode == "keyboard" and keys[pygame.K_ESCAPE]) or (js and js.get_numbuttons() > BTN_START and js.get_button(BTN_START)):
             return
 
         step = 1.0 / RATE_HZ
