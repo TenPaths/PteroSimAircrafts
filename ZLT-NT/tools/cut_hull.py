@@ -122,11 +122,16 @@ def write_glb(path, prims, src_json, src_bin, node_name="part", translation=None
             pbr['baseColorTexture'] = {"index": add_painted(png)}
             pbr.pop('baseColorFactor', None)
         if paint_as:
-            # The same material under another name, wearing its own sheet: the fin's flat one.
+            # The same material under another name: wearing its own sheet (the fin's), or none
+            # at all (the pods, which the envelope sheet had painted with the stripe).
             mat['name'] = paint_as[0]
             pbr = mat.setdefault('pbrMetallicRoughness', {})
-            pbr['baseColorTexture'] = {"index": add_painted(paint_as[1], paint_as[2])}
             pbr.pop('baseColorFactor', None)
+            pbr.pop('baseColorTexture', None)
+            if paint_as[1]:
+                pbr['baseColorTexture'] = {"index": add_painted(paint_as[1], paint_as[2])}
+            else:
+                pbr['baseColorFactor'] = [0.98, 0.98, 0.97, 1.0]
         out_mats.append(mat)
         mat_map[key] = len(out_mats) - 1
         return mat_map[key]
@@ -178,7 +183,9 @@ def write_glb(path, prims, src_json, src_bin, node_name="part", translation=None
 SRC = sys.argv[1]
 OUT = sys.argv[2]
 LIVERY = sys.argv[3] if len(sys.argv) > 3 else None    # a PNG for the envelope, laid out by sheet_uv
-FIN_SHEET = sys.argv[4] if len(sys.argv) > 4 else None # a PNG for the upper fin, laid out by fin_uv
+# Two PNGs for the upper fin, one per face, laid out by fin_uv: starboard then port.
+FIN_SHEETS = (sys.argv[4], sys.argv[5]) if len(sys.argv) > 5 else None
+POD = ('Pod', None, None)     # plain white: the pods and their pylons carry no livery
 YAX = 3.88
 HINGE_Z = 29.9      # the fin sheet doubles here: forward of it the fixed fin, aft of it the rudder
 FIN_R = 3.4
@@ -336,56 +343,71 @@ def upper_fin(p):
 
 
 def fin_uv(prim, shift=(0.0, 0.0, 0.0)):
-    """A flat sheet for the fin: u along z from the leading-edge station, v down from the tip.
+    """The fin on flat sheets: u along z from the leading-edge station, v down from the tip.
 
     Rigid, not fitted to the chord: the leading edge and the hinge are both swept, and a sheet
     stretched to the chord at every height sheared every glyph forty degrees. Laid out rigidly
     the lettering has to sit where the chord is at its own height, which livery.py does.
 
-    The port face has u reversed, so one sheet reads true from both sides. Which face a vertex
-    belongs to is decided per triangle, by where the triangle's corners lie on average: the
-    ridge vertices along the leading edge, the tip and the trailing edge sit at |x| below a
-    micrometre with float-noise signs, and judged one by one they handed the edge triangles
+    One sheet per face, so each face is lettered for itself and nothing is mirrored in the
+    mapping. Which face a triangle belongs to is decided by where its corners lie on average:
+    the ridge vertices along the leading edge, the tip and the trailing edge sit at |x| below
+    a micrometre with float-noise signs, and judged one by one they handed the edge triangles
     corners from both faces, which smeared the whole sheet into a strip along every edge. A
-    ridge vertex used by both faces is written twice, once per side.
+    ridge vertex used by both faces is written once per face.
     """
     pos, nrm, tris = prim['pos'], prim['nrm'], prim['tris']
-    seen, npos, nnrm, nuv, ntris = {}, [], [], [], []
-    for t in tris:
-        side = -1 if sum(pos[i][0] for i in t) < 0.0 else 1
-        nt = []
-        for i in t:
-            if (i, side) not in seen:
-                seen[(i, side)] = len(npos)
-                x, y, z = pos[i]
-                u = (z + shift[2] - FIN_LE) / (FIN_TE - FIN_LE)
-                npos.append(pos[i])
-                nnrm.append(nrm[i])
-                nuv.append((1.0 - u if side < 0 else u, 1.0 - (math.hypot(x, y + shift[1] - YAX) - 4.0) / (9.1 - 4.0)))
-            nt.append(seen[(i, side)])
-        ntris.append(tuple(nt))
-    return dict(prim, pos=npos, nrm=nnrm, uv=nuv, tris=ntris, paint_as=('Fin', FIN_SHEET, CLAMP))
+    faces = []
+    for side, name, sheet in ((1, 'FinStbd', FIN_SHEETS[0]), (-1, 'FinPort', FIN_SHEETS[1])):
+        seen, npos, nnrm, nuv, ntris = {}, [], [], [], []
+        for t in tris:
+            if (-1 if sum(pos[i][0] for i in t) < 0.0 else 1) != side:
+                continue
+            nt = []
+            for i in t:
+                if i not in seen:
+                    seen[i] = len(npos)
+                    x, y, z = pos[i]
+                    npos.append(pos[i])
+                    nnrm.append(nrm[i])
+                    nuv.append(((z + shift[2] - FIN_LE) / (FIN_TE - FIN_LE),
+                                1.0 - (math.hypot(x, y + shift[1] - YAX) - 4.0) / (9.1 - 4.0)))
+                nt.append(seen[i])
+            ntris.append(tuple(nt))
+        if ntris:
+            faces.append(dict(prim, pos=npos, nrm=nnrm, uv=nuv, tris=ntris, paint_as=(name, sheet, CLAMP)))
+    return faces
+
+
+def pylon(p):
+    """The side pods' pylons, left on the hull when the pods are cut: white, like the pods."""
+    x, y, z = p
+    return abs(x) > 7.0 and y < 2.0 and -9.6 < z < -6.2
 
 
 os.makedirs(OUT, exist_ok=True)
 for name, _, hinge in PARTS:
     tris = taken[name]
     src = prims[12]
-    part = compact(src, tris, hinge)
-    if name == "rudder_upper" and FIN_SHEET:
-        part = fin_uv(part, hinge)     # the rudder continues the fin's sheet, so lettering crosses the hinge
-    size = write_glb(os.path.join(OUT, "zlt_nt_%s.glb" % name), [part], g, b, name, paint=PAINT)
+    parts = [compact(src, tris, hinge)]
+    if name == "rudder_upper" and FIN_SHEETS:
+        parts = fin_uv(parts[0], hinge)   # the rudder continues the fin's sheets, so the flag can sit on it
+    if name.startswith("nacelle"):
+        parts[0]['paint_as'] = POD
+    size = write_glb(os.path.join(OUT, "zlt_nt_%s.glb" % name), parts, g, b, name, paint=PAINT)
     print("%-14s %5d tris  hinge gltf=(%.2f %.2f %.2f)  ue=(%.2f %.2f %.2f)  %d bytes"
           % (name, len(tris), hinge[0], hinge[1], hinge[2], -hinge[2], hinge[0], hinge[1], size))
 
 body = []
 for pi, tris in hull:
     src = prims[pi]
-    if FIN_SHEET and g['materials'][src['material']]['name'] == CUT_FROM:
+    if FIN_SHEETS and g['materials'][src['material']]['name'] == CUT_FROM:
         fin = {t for t in tris if all(upper_fin(src['pos'][i]) for i in t)}
-        body.append(compact(src, [t for t in tris if t not in fin]))
-        body.append(fin_uv(compact(src, sorted(fin))))
-        print("upper fin      %5d tris  on its own sheet" % len(fin))
+        pyl = {t for t in tris if t not in fin and all(pylon(src['pos'][i]) for i in t)}
+        body.append(compact(src, [t for t in tris if t not in fin and t not in pyl]))
+        body.extend(fin_uv(compact(src, sorted(fin))))
+        body.append(dict(compact(src, sorted(pyl)), paint_as=POD))
+        print("upper fin      %5d tris  on its own sheets;  pylons %d tris plain" % (len(fin), len(pyl)))
     else:
         body.append(compact(src, tris))
 size = write_glb(os.path.join(OUT, "zlt_nt_airframe.glb"), body, g, b, "body", paint=PAINT)

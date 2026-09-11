@@ -15,7 +15,7 @@ so that band is flipped top-to-bottom. Capitals flipped top-to-bottom look mirro
 which is why the port band resisted every left-right mirror it was given. Nothing is
 moved along u, which keeps the same word at the same station on either side.
 
-  python tools/livery.py textures/envelope.png textures/fin.png
+  python tools/livery.py textures/envelope.png textures/fin_stbd.png textures/fin_port.png
 """
 import math, sys
 from PIL import Image, ImageDraw, ImageFont
@@ -132,33 +132,53 @@ out = sys.argv[1] if len(sys.argv) > 1 else "envelope.png"
 img.save(out)
 print("wrote", out, img.size)
 
-# The upper fin carries the papers, as the real one does. Its sheet is rigid: u along z from
-# the leading-edge station, 11.4 m across 1024 px, v down the 5.1 m of span across 512. The
-# fixed fin is a swept parallelogram on it -- measured, its chord runs u = 0.116..0.552 at
-# r = 5.25 and 0.450..0.718 at r = 8.25 -- and the port face shows the sheet reversed about
-# u = 0.5, so a row has to fit the chord at its own height and that chord's mirror. At the
-# name's height that leaves u = 0.37..0.63; the rows below are laid out inside it.
-if len(sys.argv) > 2:
+# The upper fin carries the papers, laid out from the photograph: the name large and high on
+# the fin, ending just ahead of the hinge; the type beneath it, ending under the name's end;
+# the registration in light type above the name; the flag beside it, across the hinge on the
+# rudder. Each face gets a sheet of its own -- the same layout, glyphs mirrored for starboard,
+# plain for port -- so nothing has to fit a chord and its mirror at once. The sheet is rigid:
+# u along the hull from the leading-edge station, 11.4 m across 1024 px, v down the 5.1 m of
+# span across 512, and a tile drawn square is narrowed to that aspect before it goes on.
+if len(sys.argv) > 3:
     FW, FH = 1024, 512
     FIN_ASPECT = (FW / 11.4) / (FH / 5.1)
+    NARROW_BOLD = "C:/Windows/Fonts/ARIALNB.TTF"
+    NARROW = "C:/Windows/Fonts/ARIALN.TTF"
 
-    def ink_fin(layer, centre_x, centre_y, parts):
-        layer2 = Image.new("RGBA", (FW, FH), (0, 0, 0, 0))
-        w = ink(layer2, (0, centre_y), parts, Image.FLIP_LEFT_RIGHT, FIN_ASPECT)
-        layer.alpha_composite(layer2, (centre_x - w // 2, 0))
-        return w
+    def fin_x(u):
+        return int(u * FW)
 
-    fin = Image.new("RGB", (FW, FH), WHITE)
-    layer = Image.new("RGBA", (FW, FH), (0, 0, 0, 0))
-    ink_fin(layer, FW // 2, 226, [("ZEPPELIN", BOLD, 50, 0, 0)])                # r = 6.9 m
-    ink_fin(layer, FW // 2, 262, [("Neue Technologie", PLAIN, 20, 0, 0)])
-    w = ink_fin(layer, FW // 2 + 30, 170, [("D-LZNT", BOLD, 24, 0, 0)])         # r = 7.4 m
-    # The flag sits to the right of the registration in view, so left of it on the mirrored sheet.
-    tile = Image.new("RGBA", (int(54 * FIN_ASPECT), 30), (0, 0, 0, 0))
-    t = ImageDraw.Draw(tile)
-    for i, band in enumerate(((0, 0, 0), (221, 0, 0), (255, 206, 0))):
-        t.rectangle([0, i * 10, tile.width, i * 10 + 10], fill=band + (255,))
-    layer.alpha_composite(tile, (FW // 2 + 30 - w // 2 - tile.width - 10, 170 - 15))
-    fin.paste(layer, (0, 0), layer)
-    fin.save(sys.argv[2])
-    print("wrote", sys.argv[2], fin.size)
+    def fin_y(r):
+        return int((9.1 - r) / 5.1 * FH)
+
+    def stamp(layer, right_u, r, text, font, cap_m, mirror):
+        """One word, its right edge at right_u and its capitals centred on radius r."""
+        size = int(round(cap_m * (FH / 5.1) / 0.716))
+        f = ImageFont.truetype(font, size)
+        box = f.getbbox(text)
+        tile = Image.new("RGBA", (box[2] + 8, box[3] + 8), (0, 0, 0, 0))
+        ImageDraw.Draw(tile).text((0, 0), text, font=f, fill=GREY + (255,))
+        tile = tile.resize((max(1, int(tile.width * FIN_ASPECT)), tile.height), Image.LANCZOS)
+        if mirror:
+            tile = tile.transpose(Image.FLIP_LEFT_RIGHT)
+        b = tile.getbbox()
+        layer.alpha_composite(tile, (fin_x(right_u) - b[2], fin_y(r) - (b[1] + b[3]) // 2))
+
+    for path, mirror in ((sys.argv[2], True), (sys.argv[3], False)):
+        fin = Image.new("RGB", (FW, FH), WHITE)
+        layer = Image.new("RGBA", (FW, FH), (0, 0, 0, 0))
+        stamp(layer, 0.672, 7.60, "ZEPPELIN", NARROW_BOLD, 0.48, mirror)
+        stamp(layer, 0.640, 7.05, "Neue Technologie", NARROW, 0.17, mirror)
+        stamp(layer, 0.700, 8.15, "D-LZNT", NARROW, 0.26, mirror)
+        # The flag, on the rudder. Not right behind the hinge: at this height the fixed fin's
+        # trailing edge is swept forward of the rudder's cut, and a flag at u = 0.73 fell into
+        # that gap and showed as a black sliver. A flag reads the same either way round.
+        tile = Image.new("RGBA", (int(0.5 * FW / 11.4), int(0.3 * FH / 5.1)), (0, 0, 0, 0))
+        t = ImageDraw.Draw(tile)
+        third = tile.height / 3.0
+        for i, band in enumerate(((0, 0, 0), (221, 0, 0), (255, 206, 0))):
+            t.rectangle([0, int(i * third), tile.width, int((i + 1) * third)], fill=band + (255,))
+        layer.alpha_composite(tile, (fin_x(0.805), fin_y(8.15) - tile.height // 2))
+        fin.paste(layer, (0, 0), layer)
+        fin.save(path)
+        print("wrote", path, fin.size)
